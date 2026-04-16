@@ -5,10 +5,9 @@
 <div class="page-header">
   <div>
     <div class="page-title">Operasyon takibi</div>
-    <div style="font-size:12px;color:#888;margin-top:3px">En yorgundan en fite sıralı</div>
+    <div style="font-size:13px;color:#888;margin-top:3px">En yorgundan en fite sıralı</div>
   </div>
   <div style="display:flex;gap:8px">
-    <a href="/operations/add" class="btn btn-primary">+ İş girişi</a>
     <a href="/vessels/add" class="btn btn-secondary">+ Gemi ekle</a>
   </div>
 </div>
@@ -17,14 +16,14 @@
 <table style="width:100%;border-collapse:collapse">
   <thead>
     <tr style="background:#F8F8F8;border-bottom:1px solid #e8e8e8">
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">#</th>
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Kaptan</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">İş</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Çal. saati</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Fatigue</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">MLC kal.</th>
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Aktif gemi</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Durum</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">#</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Pilot</th>
+      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Jobs</th>
+      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Working Hours</th>
+      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">R/12</th>
+      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Fatigue</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Active Vessel</th>
+      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Status</th>
     </tr>
   </thead>
   <tbody>
@@ -32,57 +31,53 @@
   {% set norm = p.son_fatigue_norm or 0 %}
   {% set durum = p.fatigue_durum or 'FIT' %}
   {% if norm > 100 %}
-    {% set row_bg = '#FFF5F5' %}
+    {% set row_bg = '#FFF0F0' %}
     {% set badge_cls = 'badge-darkred' %}
-    {% set bar_color = '#A32D2D' %}
+    {% set bar_color = '#7a0010' %}
   {% elif norm >= 90 %}
-    {% set row_bg = '#FFF5F5' %}
+    {% set row_bg = '#FFF0F0' %}
     {% set badge_cls = 'badge-red' %}
-    {% set bar_color = '#E24B4A' %}
+    {% set bar_color = '#c0152a' %}
   {% elif norm >= 75 %}
-    {% set row_bg = '#FFFBF5' %}
+    {% set row_bg = '#FFF5EE' %}
     {% set badge_cls = 'badge-red' %}
-    {% set bar_color = '#E24B4A' %}
+    {% set bar_color = '#c0152a' %}
   {% elif norm >= 50 %}
-    {% set row_bg = '#FFFDF5' %}
+    {% set row_bg = '#FFFBF0' %}
     {% set badge_cls = 'badge-orange' %}
-    {% set bar_color = '#BA7517' %}
+    {% set bar_color = '#b85c00' %}
   {% elif norm >= 30 %}
     {% set row_bg = '#fff' %}
     {% set badge_cls = 'badge-blue' %}
-    {% set bar_color = '#378ADD' %}
+    {% set bar_color = '#185FA5' %}
   {% else %}
     {% set row_bg = '#fff' %}
     {% set badge_cls = 'badge-green' %}
-    {% set bar_color = '#639922' %}
+    {% set bar_color = '#1a7a2e' %}
   {% endif %}
-  <tr style="background:{{ row_bg }};border-bottom:1px solid #f0f0f0">
-    <td style="padding:10px 14px;color:#aaa;font-size:13px">{{ loop.index }}</td>
+  {% set wh = p.calisma_saati or 0 %}
+  {% set r12 = 12 - wh %}
+  <tr style="background:{{ row_bg }};border-bottom:1px solid #f0f0f0;cursor:pointer"
+      onclick="window.location='/pilots/{{ p.pilot_id }}/jobs'">
+    <td style="padding:10px 14px;color:#aaa;font-size:14px">{{ loop.index }}</td>
     <td style="padding:10px 14px">
-      <div style="font-weight:600;font-size:13px">{{ p.ad_soyad }}</div>
-      {% if p.telefon %}<div style="font-size:11px;color:#999">{{ p.telefon }}</div>{% endif %}
+      <div style="font-weight:700;font-size:15px">{{ p.ad_soyad }}</div>
+      {% if p.telefon %}<div style="font-size:12px;color:#999">{{ p.telefon }}</div>{% endif %}
     </td>
-    <td style="padding:10px 14px;text-align:center;font-size:13px;font-weight:600">{{ p.is_sayisi or 0 }}</td>
-    <td style="padding:10px 14px;text-align:center;font-size:13px">{{ p.calisma_saati or '0.00' }}s</td>
-    <td style="padding:10px 14px;text-align:center;min-width:100px">
-      <div style="font-size:16px;font-weight:700;color:{{ bar_color }}">
+    <td style="padding:10px 14px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
+    <td style="padding:10px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
+    <td style="padding:10px 14px;text-align:center;font-size:15px;font-weight:600;color:{% if r12 < 2 %}#c0152a{% elif r12 < 4 %}#b85c00{% else %}#555{% endif %}">
+      {{ '%.2f'|format(r12) }}
+    </td>
+    <td style="padding:10px 14px;text-align:center;min-width:110px">
+      <div style="font-size:18px;font-weight:800;color:{{ bar_color }}">
         {{ norm }}{% if norm > 100 %}+{% endif %}
       </div>
       <div class="score-bar" style="width:80px;margin:4px auto 0">
         <div class="score-bar-fill" style="width:{{ [norm,100]|min }}%;background:{{ bar_color }}"></div>
       </div>
     </td>
-    <td style="padding:10px 14px;text-align:center;font-size:13px">
-      {% set mlc_kal = (14 - (p.calisma_saati or 0)) %}
-      {% if mlc_kal < 0 %}
-        <span style="color:#E24B4A;font-weight:600">{{ '%.2f'|format(mlc_kal) }}s</span>
-      {% elif mlc_kal < 3 %}
-        <span style="color:#BA7517;font-weight:600">{{ '%.2f'|format(mlc_kal) }}s</span>
-      {% else %}
-        <span style="color:#555">{{ '%.2f'|format(mlc_kal) }}s</span>
-      {% endif %}
-    </td>
-    <td style="padding:10px 14px;font-size:12px;color:#185FA5">
+    <td style="padding:10px 14px;font-size:13px;color:#185FA5;font-weight:500">
       {{ p.aktif_gemi or '—' }}
     </td>
     <td style="padding:10px 14px;text-align:center">
@@ -91,7 +86,7 @@
   </tr>
   {% else %}
   <tr>
-    <td colspan="8" style="padding:32px;text-align:center;color:#aaa">
+    <td colspan="8" style="padding:32px;text-align:center;color:#aaa;font-size:15px">
       Henüz kaptan eklenmemiş — <a href="/pilots/add" style="color:#185FA5">kaptan ekle</a>
     </td>
   </tr>

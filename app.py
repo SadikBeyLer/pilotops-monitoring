@@ -263,6 +263,19 @@ def api_detect_tip():
     return jsonify({'tip': tip, 'k': k, 'label': label, 'color': color, 'bg': bg})
 
 # ── Uygulama başlangıcı ──────────────────────────────────────
+# ── Pilot Jobs ───────────────────────────────────────────────
+@app.route('/pilots/<int:pilot_id>/jobs')
+def pilot_jobs(pilot_id):
+    db = get_db()
+    pilot = db.execute("SELECT * FROM pilots WHERE id=?", (pilot_id,)).fetchone()
+    jobs = db.execute("""
+        SELECT o.*, v.gemi_adi, v.tip, v.grt
+        FROM operations o
+        JOIN vessels v ON v.id = o.vessel_id
+        WHERE o.pilot_id = ?
+        ORDER BY o.off_station DESC
+    """, (pilot_id,)).fetchall()
+    return render_template('pilot_jobs.html', pilot=pilot, jobs=jobs)
 if __name__ == '__main__':
     if not os.path.exists(DATABASE):
         init_db()
