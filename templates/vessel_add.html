@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}Gemi Ekle — PilotOps{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-title">Yeni gemi ekle</div>
+  <a href="/vessels" class="btn btn-secondary">← Geri</a>
+</div>
+<form method="POST">
+
+<div class="section">
+  <div class="section-title">Gemi kimliği</div>
+  <div class="grid3">
+    <div class="form-group">
+      <label>IMO Numarası</label>
+      <input type="text" name="imo_no" placeholder="IMO 9876543">
+    </div>
+    <div class="form-group">
+      <label>Gemi Adı *</label>
+      <input type="text" name="gemi_adi" required placeholder="OCEAN STAR">
+    </div>
+    <div class="form-group">
+      <label>Bayrak</label>
+      <select name="bayrak">
+        <option value="">Seç...</option>
+        <option>Türkiye</option><option>Panama</option><option>Liberia</option>
+        <option>Marshall Isl.</option><option>Bahamas</option><option>Comoros</option>
+        <option>Singapore</option><option>Malta</option><option>Cyprus</option>
+        <option>Russian Fed.</option><option>Belize</option><option>Vanuatu</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Teknik bilgiler</div>
+  <div class="grid4">
+    <div class="form-group">
+      <label>Tip</label>
+      <select name="tip">
+        <option value="">Seç...</option>
+        <option value="Gnr">Gnr — General cargo</option>
+        <option value="Tan">Tan — Tanker</option>
+        <option value="Con">Con — Container</option>
+        <option value="Blk">Blk — Bulk carrier</option>
+        <option value="Ro">Ro — Ro-Ro</option>
+        <option value="DIY">DIY — Dry bulk</option>
+        <option value="D5a">D5a — Offshore</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>GRT</label>
+      <input type="number" name="grt" placeholder="12075" step="1">
+    </div>
+    <div class="form-group">
+      <label>LOA (m)</label>
+      <input type="number" name="loa" placeholder="145.0" step="0.1">
+    </div>
+    <div class="form-group">
+      <label>Not</label>
+      <input type="text" name="not_alani" placeholder="Serbest not...">
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:4px">
+    <div class="form-group">
+      <label>Thruster Baş</label>
+      <input type="number" name="thruster_bas" value="0" min="0">
+    </div>
+    <div class="form-group">
+      <label>Thruster Kıç</label>
+      <input type="number" name="thruster_kic" value="0" min="0">
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+    <input type="checkbox" name="tehlikeli_yuk" id="teh" style="width:16px;height:16px">
+    <label for="teh" style="font-size:13px;cursor:pointer">Tehlikeli yük var (IMDG)</label>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Sefer bilgileri</div>
+  <div class="grid4">
+    <div class="form-group">
+      <label>From (Kalkış)</label>
+      <input type="text" name="from_liman" placeholder="TRISK — İskenderun">
+    </div>
+    <div class="form-group">
+      <label>To (Varış)</label>
+      <input type="text" name="to_liman" placeholder="TRMRN — Mersin">
+    </div>
+    <div class="form-group">
+      <label>Geliş zamanı (ETA)</label>
+      <input type="datetime-local" name="gelis_zamani">
+    </div>
+    <div class="form-group">
+      <label>Durum</label>
+      <select name="durum">
+        <option value="yolda">Yolda</option>
+        <option value="demirde">Demirde</option>
+        <option value="limanda">Limanda</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end">
+  <a href="/vessels" class="btn btn-secondary">İptal</a>
+  <button type="submit" class="btn btn-primary">Gemiyi kaydet</button>
+</div>
+</form>
+{% endblock %}

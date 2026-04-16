@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% block title %}İş Girişi — PilotOps{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="page-title">Yeni iş girişi</div>
+  <a href="/" class="btn btn-secondary">← Geri</a>
+</div>
+<form method="POST" id="op-form">
+
+<div class="section">
+  <div class="section-title">Kaptan & Gemi</div>
+  <div class="grid2">
+    <div class="form-group">
+      <label>Kılavuz Kaptan *</label>
+      <select name="pilot_id" required onchange="loadFatigue(this.value)">
+        <option value="">Seç...</option>
+        {% for p in pilots %}
+        <option value="{{ p.id }}">{{ p.ad_soyad }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Gemi *</label>
+      <select name="vessel_id" required>
+        <option value="">Seç...</option>
+        {% for v in vessels %}
+        <option value="{{ v.id }}">{{ v.gemi_adi }} — {{ v.tip }} · {{ '{:,.0f}'.format(v.grt or 0) }} GRT</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Sefer — From / To</div>
+  <div class="grid2">
+    <div class="form-group">
+      <label>From *</label>
+      <select name="from_nokta" required onchange="detectTip()">
+        <option value="">Seç...</option>
+        <optgroup label="Açık deniz">
+          <option value="Pilot Position">Pilot Position</option>
+          <option value="Demir">Demir</option>
+        </optgroup>
+        <optgroup label="Rıhtımlar">
+          <option>Tosyalı / P.3</option><option>Sanko / P.3</option>
+          <option>MMK / P.3</option><option>Ekinciler / P.4</option>
+          <option>Su Gözü / Anch</option><option>Assan / P.2</option>
+          <option>Global / YP1.N</option><option>Eski Yazıcı / P.5</option>
+          <option>Toros / P.1</option><option>Demir-No.1</option>
+          <option>Demir-No.2</option><option>Demir-No.3</option>
+          <option>Demir-No.4</option>
+        </optgroup>
+        <optgroup label="Şamandıralar">
+          <option value="Wimba /Buoys">Wimba / Buoys</option>
+          <option value="G.Nato">G.Nato</option><option value="K.Nato">K.Nato</option>
+          <option value="Sa/Sa">Sa/Sa</option><option value="Petgaz">Petgaz</option>
+          <option value="B.Aygaz">B.Aygaz</option><option value="K.Aygaz">K.Aygaz</option>
+          <option value="Milangaz">Milangaz</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>To *</label>
+      <select name="to_nokta" required onchange="detectTip()">
+        <option value="">Seç...</option>
+        <optgroup label="Açık deniz">
+          <option value="Pilot Position">Pilot Position</option>
+          <option value="Demir">Demir</option>
+        </optgroup>
+        <optgroup label="Rıhtımlar">
+          <option>Tosyalı / P.3</option><option>Sanko / P.3</option>
+          <option>MMK / P.3</option><option>Ekinciler / P.4</option>
+          <option>Su Gözü / Anch</option><option>Assan / P.2</option>
+          <option>Global / YP1.N</option><option>Eski Yazıcı / P.5</option>
+          <option>Toros / P.1</option><option>Demir-No.1</option>
+          <option>Demir-No.2</option><option>Demir-No.3</option>
+          <option>Demir-No.4</option>
+        </optgroup>
+        <optgroup label="Şamandıralar">
+          <option value="Wimba /Buoys">Wimba / Buoys</option>
+          <option value="G.Nato">G.Nato</option><option value="K.Nato">K.Nato</option>
+          <option value="Sa/Sa">Sa/Sa</option><option value="Petgaz">Petgaz</option>
+          <option value="B.Aygaz">B.Aygaz</option><option value="K.Aygaz">K.Aygaz</option>
+          <option value="Milangaz">Milangaz</option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+  <div id="tip-box" style="display:none;padding:10px 14px;border-radius:8px;border:1px solid #e0e0e0;background:#fff;margin-top:4px;display:flex;align-items:center;gap:12px">
+    <span style="font-size:12px;color:#888">Tespit edilen iş tipi:</span>
+    <span id="tip-badge" style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">—</span>
+    <span id="tip-k" style="font-size:12px;color:#888"></span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Saatler</div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #e0e0e0;border-radius:8px;overflow:hidden">
+    <div style="padding:10px 12px;border-right:1px solid #e0e0e0">
+      <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:5px">OFF STATION</div>
+      <input type="datetime-local" name="off_station" id="t-off" required style="border:none;background:transparent;font-size:13px;width:100%;padding:0" oninput="calcSure()">
+      <div style="font-size:10px;color:#bbb;margin-top:3px">İstasyondan çıkış</div>
+    </div>
+    <div style="padding:10px 12px;border-right:1px solid #e0e0e0;background:#EEF5FF">
+      <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:5px">POB</div>
+      <input type="datetime-local" name="pob" id="t-pob" required style="border:none;background:transparent;font-size:13px;width:100%;padding:0;color:#0C447C;font-weight:500" oninput="calcSure()">
+      <div style="font-size:10px;color:#85B7EB;margin-top:3px">Gemiye çıkış</div>
+    </div>
+    <div style="padding:10px 12px;border-right:1px solid #e0e0e0;background:#EEF5FF">
+      <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:5px">P.OFF</div>
+      <input type="datetime-local" name="poff" id="t-poff" required style="border:none;background:transparent;font-size:13px;width:100%;padding:0;color:#0C447C;font-weight:500" oninput="calcSure()">
+      <div style="font-size:10px;color:#85B7EB;margin-top:3px">Gemiden iniş</div>
+    </div>
+    <div style="padding:10px 12px">
+      <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:5px">ON STATION</div>
+      <input type="datetime-local" name="on_station" id="t-on" required style="border:none;background:transparent;font-size:13px;width:100%;padding:0" oninput="calcSure()">
+      <div style="font-size:10px;color:#bbb;margin-top:3px">İstasyona dönüş</div>
+    </div>
+  </div>
+  <div id="sure-info" style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:#888">
+    <span>Transfer: <strong id="s-trans">—</strong></span>
+    <span>Gemide: <strong id="s-gemi">—</strong></span>
+    <span>Toplam: <strong id="s-top">—</strong></span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">F/A Drafts</div>
+  <div class="grid2">
+    <div class="form-group">
+      <label>Baş draft (m)</label>
+      <input type="number" name="draft_bas" placeholder="6.50" step="0.01" min="0" max="25">
+    </div>
+    <div class="form-group">
+      <label>Kıç draft (m)</label>
+      <input type="number" name="draft_kic" placeholder="7.20" step="0.01" min="0" max="25">
+    </div>
+  </div>
+</div>
+
+<div class="section" id="fatigue-section">
+  <div class="section-title">Fatigue önizleme</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:8px;padding:12px 16px">
+    <div style="text-align:center">
+      <div style="font-size:11px;color:#888;margin-bottom:3px">Mevcut skor</div>
+      <div style="font-size:20px;font-weight:700;color:#888" id="f-onceki">—</div>
+    </div>
+    <div style="font-size:20px;color:#ccc">+</div>
+    <div style="text-align:center">
+      <div style="font-size:11px;color:#888;margin-bottom:3px">Bu iş katkısı</div>
+      <div style="font-size:20px;font-weight:700;color:#378ADD" id="f-katki">—</div>
+    </div>
+    <div style="font-size:20px;color:#ccc">=</div>
+    <div style="text-align:center">
+      <div style="font-size:11px;color:#888;margin-bottom:3px">İş sonrası</div>
+      <div style="font-size:24px;font-weight:700" id="f-sonraki">—</div>
+    </div>
+  </div>
+  <div class="score-bar" style="margin-top:8px">
+    <div class="score-bar-fill" id="f-bar" style="width:0%"></div>
+  </div>
+  <div id="f-uyari" style="display:none;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px"></div>
+</div>
+
+<div style="display:flex;gap:8px;justify-content:flex-end">
+  <a href="/" class="btn btn-secondary">İptal</a>
+  <button type="submit" class="btn btn-primary">İşi kaydet</button>
+</div>
+</form>
+
+<script>
+var SAMANDIRALAR = {{ samandiralar | tojson }};
+var currentFatigue = 0;
+var currentK = 1.0;
+
+function isSam(s){ return SAMANDIRALAR.some(function(sam){ return s.toLowerCase().includes(sam); }); }
+
+function detectTip(){
+  var f = document.querySelector('[name=from_nokta]').value.toLowerCase();
+  var t = document.querySelector('[name=to_nokta]').value.toLowerCase();
+  if(!f||!t) return;
+  var tip,k,label,color,bg;
+  if(isSam(f)){tip='buoy_kalkis';k=0.7;label='Şamandıra kalkış';color='#3C3489';bg='#EEEDFE';}
+  else if(isSam(t)){tip='buoy_yanasma';k=1.2;label='Şamandıra yanaşma';color='#7A4800';bg='#FAEEDA';}
+  else if(f==='pilot position'||f==='demir'){tip='yanasma';k=1.0;label='Yanaşma';color='#27500A';bg='#EAF3DE';}
+  else if(t==='pilot position'||t==='demir'){tip='kalkis';k=0.7;label='Kalkış';color='#0C447C';bg='#E6F1FB';}
+  else{tip='yanasma';k=1.0;label='Yanaşma';color='#27500A';bg='#EAF3DE';}
+  currentK=k;
+  var box=document.getElementById('tip-box');
+  box.style.display='flex';
+  var badge=document.getElementById('tip-badge');
+  badge.textContent=label;badge.style.background=bg;badge.style.color=color;
+  document.getElementById('tip-k').textContent='k = '+k.toFixed(2);
+  updateFatigue();
+}
+
+function loadFatigue(pid){
+  if(!pid)return;
+  fetch('/api/pilot/'+pid+'/fatigue')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      currentFatigue=d.norm||0;
+      document.getElementById('f-onceki').textContent=(d.norm||0)+'/100';
+      updateFatigue();
+    });
+}
+
+function dt(id){
+  var v=document.getElementById(id).value;
+  if(!v)return null;
+  return new Date(v);
+}
+
+function calcSure(){
+  var off=dt('t-off'),pob=dt('t-pob'),poff=dt('t-poff'),on=dt('t-on');
+  if(off&&pob&&poff&&on){
+    var transMs=(pob-off)+(on-poff);
+    var gemiMs=poff-pob;
+    var topMs=on-off;
+    document.getElementById('s-trans').textContent=fmtMs(transMs);
+    document.getElementById('s-gemi').textContent=fmtMs(gemiMs);
+    document.getElementById('s-top').textContent=fmtMs(topMs);
+    updateFatigue();
+  }
+}
+
+function fmtMs(ms){
+  var m=Math.round(ms/60000);
+  var h=Math.floor(m/60),mn=m%60;
+  return h>0?h+'s '+(mn>0?mn+'dk':''):mn+'dk';
+}
+
+function updateFatigue(){
+  var off=dt('t-off'),pob=dt('t-pob'),poff=dt('t-poff'),on=dt('t-on');
+  if(!off||!pob||!poff||!on)return;
+  var transH=((pob-off)+(on-poff))/3600000;
+  var gemiH=(poff-pob)/3600000;
+  var katki=Math.round((currentK*gemiH+0.5*transH)*8);
+  var sonraki=currentFatigue+katki;
+  document.getElementById('f-katki').textContent='+'+katki;
+  document.getElementById('f-sonraki').textContent=sonraki+(sonraki>100?'+':'')+'/100';
+  var color=sonraki>100?'#A32D2D':sonraki>=90?'#E24B4A':sonraki>=75?'#E24B4A':sonraki>=50?'#BA7517':sonraki>=30?'#378ADD':'#639922';
+  document.getElementById('f-bar').style.width=Math.min(sonraki,100)+'%';
+  document.getElementById('f-bar').style.background=color;
+  document.getElementById('f-sonraki').style.color=color;
+  var uw=document.getElementById('f-uyari');
+  if(sonraki>100){uw.style.display='block';uw.style.background='#FCEBEB';uw.style.color='#791F1F';uw.textContent='Kritik+ — zorunlu atama, log tutulacak';}
+  else if(sonraki>=90){uw.style.display='block';uw.style.background='#FCEBEB';uw.style.color='#791F1F';uw.textContent='Kritik bölge — zorunlu atama logu tutulacak';}
+  else if(sonraki>=75){uw.style.display='block';uw.style.background='#FFF3E0';uw.style.color='#7A4800';uw.textContent='Blok eşiği — müdür onayı gerekir';}
+  else if(sonraki>=50){uw.style.display='block';uw.style.background='#FFFDE7';uw.style.color='#854F0B';uw.textContent='Dikkat — operasyon sorumlusu onayı önerilir';}
+  else{uw.style.display='none';}
+}
+</script>
+{% endblock %}
