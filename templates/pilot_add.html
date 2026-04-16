@@ -15,10 +15,40 @@
       <label>Telefon</label>
       <input type="tel" name="telefon" placeholder="+90 532 000 0000">
     </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+    <div class="form-group">
+      <label>Vardiya (Watch)</label>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        {% for w in watches %}
+        <label style="display:flex;align-items:center;gap:8px;padding:10px 18px;border:1px solid #d8d8d8;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;flex:1;justify-content:center" id="lbl-{{ w.id }}">
+          <input type="radio" name="watch_id" value="{{ w.id }}"
+                 {% if w.aktif %}checked{% endif %}
+                 onchange="highlightWatch({{ w.id }})"
+                 style="width:16px;height:16px;accent-color:#185FA5">
+          {{ w.watch_no }}
+          {% if w.aktif %}
+          <span style="background:#EAF3DE;color:#27500A;border-radius:10px;padding:1px 8px;font-size:11px">Aktif</span>
+          {% endif %}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
       <a href="/pilots" class="btn btn-secondary">İptal</a>
       <button type="submit" class="btn btn-primary">Kaydet</button>
     </div>
   </form>
 </div>
+<script>
+function highlightWatch(id) {
+  [1,2,3].forEach(function(i){
+    var lbl = document.getElementById('lbl-'+i);
+    if(lbl) lbl.style.borderColor = i===id ? '#185FA5' : '#d8d8d8';
+    if(lbl) lbl.style.background  = i===id ? '#EEF5FF' : '#fff';
+  });
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var checked = document.querySelector('input[name=watch_id]:checked');
+  if(checked) highlightWatch(parseInt(checked.value));
+});
+</script>
 {% endblock %}

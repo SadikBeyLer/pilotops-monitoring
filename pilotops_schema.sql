@@ -170,3 +170,9 @@ WHERE p.aktif = 1
 GROUP BY p.id
 ORDER BY son_fatigue_norm DESC;  -- en yorgun üstte
 
+-- ── VARSAYILAN VERİLER ───────────────────────────────────────
+INSERT OR IGNORE INTO watches (id, port_id, watch_no, baslangic, bitis, aktif) VALUES
+    (1, 1, 'Watch:1', datetime('now','-14 days'), datetime('now','-7 days'), 0),
+    (2, 1, 'Watch:2', datetime('now','-7 days'),  datetime('now'),           1),
+    (3, 1, 'Watch:3', datetime('now'),             datetime('now','+7 days'), 0);
+

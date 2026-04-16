@@ -93,15 +93,19 @@ def pilots():
 
 @app.route('/pilots/add', methods=['GET','POST'])
 def pilot_add():
+    db = get_db()
     if request.method == 'POST':
-        db = get_db()
         db.execute(
             "INSERT INTO pilots (port_id, ad_soyad, telefon) VALUES (?,?,?)",
             (1, request.form['ad_soyad'], request.form.get('telefon',''))
         )
+        watch_id = int(request.form.get('watch_id', 2))
+        db.execute("UPDATE watches SET aktif=0")
+        db.execute("UPDATE watches SET aktif=1 WHERE id=?", (watch_id,))
         db.commit()
-        return redirect(url_for('pilots'))
-    return render_template('pilot_add.html')
+        return redirect(url_for('index'))
+    watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
+    return render_template('pilot_add.html', watches=watches)
 
 # ── Gemiler ──────────────────────────────────────────────────
 @app.route('/vessels')
