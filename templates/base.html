@@ -6,49 +6,48 @@
 <title>{% block title %}PilotOps Monitoring{% endblock %}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F5F5;color:#1a1a1a;font-size:14px}
-.navbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 24px;display:flex;align-items:center;gap:0;height:52px}
-.nav-brand{font-weight:600;font-size:15px;color:#1a1a1a;margin-right:32px;text-decoration:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F5F5;color:#1a1a1a;font-size:16px}
+.navbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 24px;display:flex;align-items:center;gap:0;height:60px}
+.nav-brand{font-weight:700;font-size:20px;color:#1a1a1a;margin-right:32px;text-decoration:none}
 .nav-brand span{color:#185FA5}
-.nav-link{padding:0 14px;height:52px;display:flex;align-items:center;font-size:13px;color:#666;text-decoration:none;border-bottom:2px solid transparent}
+.nav-link{padding:0 16px;height:60px;display:flex;align-items:center;font-size:15px;color:#666;text-decoration:none;border-bottom:3px solid transparent}
 .nav-link:hover{color:#1a1a1a}
-.nav-link.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:500}
+.nav-link.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:600}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
-.watch-badge{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:500}
+.watch-badge{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4;border-radius:20px;padding:4px 14px;font-size:14px;font-weight:600}
 .container{max-width:1200px;margin:0 auto;padding:24px}
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.page-title{font-size:18px;font-weight:600}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;border:1px solid transparent}
+.page-title{font-size:20px;font-weight:700}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;text-decoration:none;border:1px solid transparent}
 .btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}
 .btn-primary:hover{background:#0C447C}
 .btn-secondary{background:#fff;color:#444;border-color:#d0d0d0}
 .btn-secondary:hover{background:#f5f5f5}
 .card{background:#fff;border:1px solid #e8e8e8;border-radius:10px;overflow:hidden}
 .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-.form-group label{font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.04em}
-.form-group input,.form-group select,.form-group textarea{border:1px solid #d8d8d8;border-radius:7px;padding:8px 10px;font-size:13px;color:#1a1a1a;background:#fff;width:100%}
+.form-group label{font-size:14px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.04em}
+.form-group input,.form-group select,.form-group textarea{border:1px solid #d8d8d8;border-radius:7px;padding:9px 12px;font-size:15px;color:#1a1a1a;background:#fff;width:100%}
 .form-group input:focus,.form-group select:focus{outline:none;border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,.1)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
-.section{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:16px 18px;margin-bottom:16px}
-.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:14px}
-.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600}
-.badge-green{background:#EAF3DE;color:#27500A}
-.badge-blue{background:#E6F1FB;color:#0C447C}
-.badge-orange{background:#FAEEDA;color:#7A4800}
-.badge-red{background:#FCEBEB;color:#791F1F}
-.badge-darkred{background:#A32D2D;color:#fff}
-.score-bar{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-top:4px}
-.score-bar-fill{height:100%;border-radius:3px}
+.section{background:#fff;border:1px solid #e8e8e8;border-radius:10px;padding:18px 20px;margin-bottom:16px}
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:14px}
+.badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:700}
+.badge-green{background:#1a7a2e;color:#fff}
+.badge-blue{background:#185FA5;color:#fff}
+.badge-orange{background:#b85c00;color:#fff}
+.badge-red{background:#c0152a;color:#fff}
+.badge-darkred{background:#7a0010;color:#fff}
+.score-bar{height:8px;background:#ddd;border-radius:4px;overflow:hidden;margin-top:4px}
+.score-bar-fill{height:100%;border-radius:4px}
 </style>
 </head>
 <body>
 <nav class="navbar">
   <a href="/" class="nav-brand">Pilot<span>Ops</span></a>
-  <a href="/" class="nav-link {% if request.endpoint=='index' %}active{% endif %}">Operasyon</a>
   <a href="/vessels" class="nav-link {% if request.endpoint=='vessels' %}active{% endif %}">Gemiler</a>
-  <a href="/pilots" class="nav-link {% if request.endpoint=='pilots' %}active{% endif %}">Kaptanlar</a>
+  <a href="/pilots" class="nav-link {% if request.endpoint=='pilots' or request.endpoint=='pilot_add' %}active{% endif %}">Pilots</a>
   <div class="nav-right">
     {% if watch %}
     <span class="watch-badge">{{ watch.watch_no }} — Aktif</span>
