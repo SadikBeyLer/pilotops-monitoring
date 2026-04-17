@@ -85,12 +85,14 @@
     </tr>
     {% endif %}
 
+    {% set watch_pasif = aktif_watch and p.watch_id != aktif_watch.id %}
+    {% set pasif = p.izinde or watch_pasif %}
     <tr style="border-bottom:1px solid #f0f0f0" id="pilot-row-{{ p.id }}">
       <td style="padding:11px 14px;color:#ccc;font-size:13px;text-align:center">›</td>
-      <td style="padding:11px 14px;font-size:15px;font-weight:700;color:{% if p.izinde %}#bbb{% else %}#1a1a1a{% endif %}">
+      <td style="padding:11px 14px;font-size:15px;font-weight:700;color:{% if pasif %}#bbb{% else %}#1a1a1a{% endif %}">
         {{ p.ad_soyad }}
       </td>
-      <td style="padding:11px 14px;font-size:14px;color:{% if p.izinde %}#ccc{% else %}#666{% endif %}">
+      <td style="padding:11px 14px;font-size:14px;color:{% if pasif %}#ccc{% else %}#666{% endif %}">
         {{ p.telefon or '—' }}
       </td>
       <td style="padding:11px 14px;text-align:center">
@@ -113,7 +115,7 @@
               {% if p.izinde %}İzinde{% else %}İzin{% endif %}
             </button>
           </form>
-          {% if p.izinde %}
+          {% if pasif %}
           <span class="badge" style="background:#e0e0e0;color:#999">Pasif</span>
           {% else %}
           <span class="badge badge-green">Aktif</span>
