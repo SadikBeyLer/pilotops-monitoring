@@ -30,10 +30,17 @@ def init_db():
         os.makedirs(db_dir, exist_ok=True)
     db = sqlite3.connect(DATABASE)
     db.row_factory = sqlite3.Row
-    with open('pilotops_schema.sql', 'r', encoding='utf-8') as f:
-        db.executescript(f.read())
+    # Pilots tablosu yoksa schema'yı çalıştır (ilk kurulum)
+    tablo_var = db.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='pilots'"
+    ).fetchone()
+    if not tablo_var:
+        with open('pilotops_schema.sql', 'r', encoding='utf-8') as f:
+            db.executescript(f.read())
+    # v1.1 — eksik kolon/tablo varsa ekle (mevcut veriyi silmez)
     try:
         db.execute("ALTER TABLE pilots ADD COLUMN watch_id INTEGER REFERENCES watches(id)")
+        db.commit()
     except Exception:
         pass
     try:
@@ -43,9 +50,9 @@ def init_db():
             watch_id INTEGER REFERENCES watches(id),
             baslangic TEXT, bitis TEXT, aktif INTEGER DEFAULT 1
         )""")
+        db.commit()
     except Exception:
         pass
-    db.commit()
     db.close()
 
 SAMANDIRALAR = ['wimba','g.nato','k.nato','sa/sa','petgaz','b.aygaz','k.aygaz','milangaz']
