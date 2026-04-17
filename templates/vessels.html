@@ -8,44 +8,105 @@
 </div>
 
 {% set all_segments = [
-  ('gelecek',     'Gelecek'),
-  ('demirde',     'Demirde'),
-  ('iskeleler',   'İskeleler'),
-  ('k_samandira', 'Kuzey Şam.'),
-  ('g_samandira', 'Güney Şam.'),
-  ('toros',       'Toros'),
-  ('irtibatta',   'İrtibatta'),
-  ('manevrada',   'Manevrada'),
+  ('gelecek',     '🕐 Gelecek'),
+  ('demirde',     '⚓ Demirde'),
+  ('iskeleler',   '🏗️ İskeleler'),
+  ('k_samandira', '🔺 Kuzey Şam.'),
+  ('g_samandira', '<span style="color:#1a7a2e">▲</span> Güney Şam.'),
+  ('toros',       '🏭 Toros'),
+  ('irtibatta',   '📡 İrtibatta'),
+  ('manevrada',   '🚢 Manevrada'),
 ] %}
 
-{# ── Segment Butonları ── #}
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px">
-  {% for key, label in all_segments %}
-  {% set count = vessels | selectattr('durum','equalto', key) | list | length %}
-  <button onclick="toggleSegment('{{ key }}')" id="btn-{{ key }}"
-    style="padding:7px 16px;border-radius:20px;border:1.5px solid #dde8f5;background:#fff;
-           font-size:13px;font-weight:600;color:#555;cursor:pointer;
-           display:inline-flex;align-items:center;gap:7px;transition:all .15s">
-    {{ label }}
-    {% if count > 0 %}
-    <span id="badge-{{ key }}"
-          style="background:#185FA5;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px">
-      {{ count }}
-    </span>
-    {% endif %}
-  </button>
-  {% endfor %}
+{# ── Segment Buton Satırı ── #}
+<div style="display:flex;align-items:center;gap:6px;margin-bottom:20px">
+
+  {# Sol grup: Gelecek, Demirde, İrtibatta, Manevrada #}
+  <div style="display:flex;gap:6px">
+    {% for key, label in [
+      ('gelecek',  '🕐 Gelecek'),
+      ('demirde',  '⚓ Demirde'),
+      ('irtibatta','📡 İrtibatta'),
+      ('manevrada','🚢 Manevrada')
+    ] %}
+    {% set count = vessels | selectattr('durum','equalto', key) | list | length %}
+    <button onclick="toggleSegment('{{ key }}')" id="btn-{{ key }}"
+      style="padding:7px 14px;border-radius:20px;border:1.5px solid #dde8f5;background:#fff;
+             font-size:13px;font-weight:600;color:#555;cursor:pointer;
+             display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap">
+      {{ label }}
+      {% if count > 0 %}
+      <span id="badge-{{ key }}" style="background:#185FA5;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px">{{ count }}</span>
+      {% endif %}
+    </button>
+    {% endfor %}
+  </div>
+
+  {# Orta — Arama #}
+  <div style="flex:1;display:flex;justify-content:center">
+    <div style="position:relative;width:200px">
+      <input type="text" id="vessel-search" placeholder="Gemi ara..."
+        oninput="searchVessel(this.value)"
+        style="width:100%;padding:7px 32px 7px 34px;border-radius:20px;border:1.5px solid #dde8f5;
+               background:#fff;font-size:13px;color:#333;outline:none;transition:border-color .15s"
+        onfocus="this.style.borderColor='#185FA5'"
+        onblur="this.style.borderColor='#dde8f5'">
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:#aaa">🔍</span>
+      <button id="search-clear" onclick="clearSearch()" style="display:none;position:absolute;right:10px;
+        top:50%;transform:translateY(-50%);border:none;background:transparent;
+        font-size:14px;color:#aaa;cursor:pointer;line-height:1">✕</button>
+    </div>
+  </div>
+
+  {# Sağ grup: İskeleler, Kuzey Şam., Güney Şam., Toros #}
+  <div style="display:flex;gap:6px">
+    {% for key, label, icon in [
+      ('iskeleler',   '🏗️ İskeleler', ''),
+      ('k_samandira', '', ''),
+      ('g_samandira', '', ''),
+      ('toros',       '🏭 Toros', '')
+    ] %}
+    {% set count = vessels | selectattr('durum','equalto', key) | list | length %}
+    <button onclick="toggleSegment('{{ key }}')" id="btn-{{ key }}"
+      style="padding:7px 14px;border-radius:20px;border:1.5px solid #dde8f5;background:#fff;
+             font-size:13px;font-weight:600;color:#555;cursor:pointer;
+             display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap">
+      {% if key == 'k_samandira' %}
+        🔺 Kuzey Şam.
+      {% elif key == 'g_samandira' %}
+        <span style="color:#1a7a2e;font-size:13px">▲</span> Güney Şam.
+      {% else %}
+        {{ label }}
+      {% endif %}
+      {% if count > 0 %}
+      <span id="badge-{{ key }}" style="background:#185FA5;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px">{{ count }}</span>
+      {% endif %}
+    </button>
+    {% endfor %}
+  </div>
+
 </div>
 
-{# ── Segment Listeleri (başlangıçta gizli) ── #}
+{# ── Arama Sonucu ── #}
+<div id="search-result" style="display:none;margin-bottom:20px">
+  <div class="card" style="padding:0">
+    <div style="padding:11px 16px;background:#FFFBF0;border-bottom:1px solid #f0e0a0;
+                font-size:13px;font-weight:700;color:#7a4800">
+      🔍 Arama Sonuçları
+    </div>
+    <div id="search-result-body"></div>
+  </div>
+</div>
+
+{# ── Segment Listeleri ── #}
 {% for key, label in all_segments %}
 {% set seg_vessels = vessels | selectattr('durum','equalto', key) | list %}
 <div id="seg-{{ key }}" style="display:none;margin-bottom:20px">
   <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;
               color:{% if key == 'irtibatta' %}#27500A{% elif key == 'manevrada' %}#0C447C{% else %}#185FA5{% endif %};
               margin-bottom:8px;padding-left:2px">
-    {{ label }}
-    <span style="font-size:11px;font-weight:600;color:#aaa;margin-left:4px">{{ seg_vessels|length }} gemi</span>
+    {{ label | safe }}
+    <span style="font-size:11px;font-weight:600;color:#aaa;margin-left:4px;text-transform:none">{{ seg_vessels|length }} gemi</span>
   </div>
 
   {% if seg_vessels %}
@@ -54,29 +115,26 @@
       <thead>
         <tr style="background:#F4F7FB;border-bottom:2px solid #dde8f5">
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888;width:180px">Gemi Adı</th>
-          <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888;width:70px">Loa</th>
+          <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888;width:65px">Loa</th>
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888;width:80px">Gt</th>
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888;width:55px">Tip</th>
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888;width:50px">BT</th>
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888">Fr → To</th>
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888;width:130px">ETA</th>
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888">Not</th>
-          <th style="padding:9px 14px;text-align:right;font-size:11px;color:#888;width:{% if key == 'manevrada' %}130px{% else %}90px{% endif %}"></th>
+          <th style="padding:9px 14px;width:{% if key == 'manevrada' %}130px{% else %}90px{% endif %}"></th>
         </tr>
       </thead>
       <tbody>
       {% for v in seg_vessels %}
-      <tr style="border-bottom:1px solid #f0f0f0">
+      <tr style="border-bottom:1px solid #f0f0f0" data-gemi="{{ v.gemi_adi | lower }}">
         <td style="padding:11px 14px;font-weight:700;font-size:14px;color:#1a1a1a">{{ v.gemi_adi }}</td>
         <td style="padding:11px 14px;font-size:13px;color:#333">{% if v.loa %}{{ v.loa|int }}m{% else %}—{% endif %}</td>
         <td style="padding:11px 14px;font-size:13px;color:#333">{% if v.grt %}{{ '{:,.0f}'.format(v.grt) }}{% else %}—{% endif %}</td>
         <td style="padding:11px 14px;font-size:13px;color:#333">{{ v.tip or '—' }}</td>
         <td style="padding:11px 14px;font-size:13px;font-weight:700">
-          {% if v.thruster_bas > 0 or v.thruster_kic > 0 %}
-            <span style="color:#1a7a2e">Yes</span>
-          {% else %}
-            <span style="color:#ccc">No</span>
-          {% endif %}
+          {% if v.thruster_bas > 0 or v.thruster_kic > 0 %}<span style="color:#1a7a2e">Yes</span>
+          {% else %}<span style="color:#ccc">No</span>{% endif %}
         </td>
         <td style="padding:11px 14px;font-size:13px;color:#333">
           {% if v.from_liman or v.to_liman %}{{ v.from_liman or '—' }} → {{ v.to_liman or '—' }}
@@ -88,9 +146,7 @@
           {% if key == 'manevrada' %}
           <a href="/operations/add?vessel_id={{ v.id }}"
              style="padding:5px 11px;border-radius:6px;background:#185FA5;color:#fff;
-                    font-size:12px;font-weight:700;text-decoration:none;margin-right:5px">
-            + İş
-          </a>
+                    font-size:12px;font-weight:700;text-decoration:none;margin-right:5px">+ İş</a>
           {% endif %}
           <div style="position:relative;display:inline-block">
             <button onclick="toggleDurumMenu('{{ key }}_{{ v.id }}', event)"
@@ -103,9 +159,9 @@
                         border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);
                         z-index:9999;min-width:170px;padding:4px 0">
               {% set all_durums = [
-                ('gelecek','Gelecek'),('demirde','Demirde'),('iskeleler','İskeleler'),
-                ('k_samandira','Kuzey Şam.'),('g_samandira','Güney Şam.'),
-                ('toros','Toros'),('irtibatta','İrtibatta'),('manevrada','Manevrada')
+                ('gelecek','🕐 Gelecek'),('demirde','⚓ Demirde'),('iskeleler','🏗️ İskeleler'),
+                ('k_samandira','🔺 Kuzey Şam.'),('g_samandira','▲ Güney Şam.'),
+                ('toros','🏭 Toros'),('irtibatta','📡 İrtibatta'),('manevrada','🚢 Manevrada')
               ] %}
               {% for dk, dl in all_durums %}
               {% if dk != key %}
@@ -131,22 +187,25 @@
 {% endfor %}
 
 <script>
+var SEGMENT_KEYS = ['gelecek','demirde','iskeleler','k_samandira','g_samandira','toros','irtibatta','manevrada'];
+
 function toggleSegment(key) {
   var el  = document.getElementById('seg-' + key);
   var btn = document.getElementById('btn-' + key);
   var isOpen = el.style.display !== 'none';
-
   // Hepsini kapat
-  ['gelecek','demirde','iskeleler','k_samandira','g_samandira','toros','irtibatta','manevrada']
-    .forEach(function(k) {
-      document.getElementById('seg-' + k).style.display = 'none';
-      var b = document.getElementById('btn-' + k);
-      b.style.background = '#fff';
-      b.style.color = '#555';
-      b.style.borderColor = '#dde8f5';
-      var badge = document.getElementById('badge-' + k);
-      if (badge) { badge.style.background = '#185FA5'; }
-    });
+  SEGMENT_KEYS.forEach(function(k) {
+    document.getElementById('seg-' + k).style.display = 'none';
+    var b = document.getElementById('btn-' + k);
+    b.style.background = '#fff';
+    b.style.color = '#555';
+    b.style.borderColor = '#dde8f5';
+    var badge = document.getElementById('badge-' + k);
+    if (badge) badge.style.background = '#185FA5';
+  });
+  document.getElementById('search-result').style.display = 'none';
+  document.getElementById('vessel-search').value = '';
+  document.getElementById('search-clear').style.display = 'none';
 
   if (!isOpen) {
     el.style.display = 'block';
@@ -154,12 +213,98 @@ function toggleSegment(key) {
     btn.style.color = '#fff';
     btn.style.borderColor = '#185FA5';
     var badge = document.getElementById('badge-' + key);
-    if (badge) { badge.style.background = 'rgba(255,255,255,0.3)'; }
-    // Listeye scroll
+    if (badge) badge.style.background = 'rgba(255,255,255,0.3)';
     setTimeout(function() {
-      el.scrollIntoView({behavior: 'smooth', block: 'start'});
+      el.scrollIntoView({behavior:'smooth', block:'start'});
     }, 50);
   }
+}
+
+// Arama
+var allVessels = [
+  {% for v in vessels %}
+  {
+    id: {{ v.id }},
+    ad: "{{ v.gemi_adi }}",
+    durum: "{{ v.durum }}",
+    loa: "{% if v.loa %}{{ v.loa|int }}m{% else %}—{% endif %}",
+    grt: "{% if v.grt %}{{ '{:,.0f}'.format(v.grt) }}{% else %}—{% endif %}",
+    tip: "{{ v.tip or '—' }}",
+    bt: {% if v.thruster_bas > 0 or v.thruster_kic > 0 %}true{% else %}false{% endif %},
+    fr: "{{ v.from_liman or '' }}",
+    to: "{{ v.to_liman or '' }}",
+    eta: "{{ v.gelis_zamani[:16] if v.gelis_zamani else '—' }}",
+    not_: "{{ v.not_alani or '' }}"
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+var durumLabels = {
+  'gelecek':'🕐 Gelecek','demirde':'⚓ Demirde','iskeleler':'🏗️ İskeleler',
+  'k_samandira':'🔺 Kuzey Şam.','g_samandira':'▲ Güney Şam.',
+  'toros':'🏭 Toros','irtibatta':'📡 İrtibatta','manevrada':'🚢 Manevrada'
+};
+
+function searchVessel(q) {
+  var clear = document.getElementById('search-clear');
+  var resultDiv = document.getElementById('search-result');
+  var resultBody = document.getElementById('search-result-body');
+
+  if (!q.trim()) {
+    resultDiv.style.display = 'none';
+    clear.style.display = 'none';
+    return;
+  }
+  clear.style.display = 'block';
+
+  // Tüm segmentleri kapat
+  SEGMENT_KEYS.forEach(function(k) {
+    document.getElementById('seg-' + k).style.display = 'none';
+    var b = document.getElementById('btn-' + k);
+    b.style.background = '#fff'; b.style.color = '#555'; b.style.borderColor = '#dde8f5';
+  });
+
+  var found = allVessels.filter(function(v) {
+    return v.ad.toLowerCase().includes(q.toLowerCase());
+  });
+
+  if (found.length === 0) {
+    resultBody.innerHTML = '<div style="padding:24px;text-align:center;color:#aaa;font-size:13px">Gemi bulunamadı</div>';
+  } else {
+    var html = '<table style="width:100%;border-collapse:collapse;table-layout:fixed">';
+    html += '<thead><tr style="background:#F4F7FB;border-bottom:2px solid #dde8f5">';
+    html += '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:180px">Gemi Adı</th>';
+    html += '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:150px">Durum</th>';
+    html += '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:65px">Loa</th>';
+    html += '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:80px">Gt</th>';
+    html += '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:55px">Tip</th>';
+    html += '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:50px">BT</th>';
+    html += '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888">Fr → To</th>';
+    html += '<th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:130px">ETA</th>';
+    html += '</tr></thead><tbody>';
+    found.forEach(function(v) {
+      html += '<tr style="border-bottom:1px solid #f0f0f0">';
+      html += '<td style="padding:11px 14px;font-weight:700;font-size:14px;color:#1a1a1a">' + v.ad + '</td>';
+      html += '<td style="padding:11px 14px;font-size:13px;color:#555">' + (durumLabels[v.durum] || v.durum) + '</td>';
+      html += '<td style="padding:11px 14px;font-size:13px;color:#333">' + v.loa + '</td>';
+      html += '<td style="padding:11px 14px;font-size:13px;color:#333">' + v.grt + '</td>';
+      html += '<td style="padding:11px 14px;font-size:13px;color:#333">' + v.tip + '</td>';
+      html += '<td style="padding:11px 14px;font-size:13px;font-weight:700">' + (v.bt ? '<span style="color:#1a7a2e">Yes</span>' : '<span style="color:#ccc">No</span>') + '</td>';
+      html += '<td style="padding:11px 14px;font-size:13px;color:#333">' + (v.fr || v.to ? (v.fr||'—') + ' → ' + (v.to||'—') : '—') + '</td>';
+      html += '<td style="padding:11px 14px;font-size:13px;color:#333">' + v.eta + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    resultBody.innerHTML = html;
+  }
+  resultDiv.style.display = 'block';
+  resultDiv.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function clearSearch() {
+  document.getElementById('vessel-search').value = '';
+  document.getElementById('search-result').style.display = 'none';
+  document.getElementById('search-clear').style.display = 'none';
 }
 
 function toggleDurumMenu(id, e) {
@@ -182,7 +327,7 @@ document.addEventListener('click', function() {
 function setDurum(vesselId, durum) {
   var form = new FormData();
   form.append('durum', durum);
-  fetch('/vessels/' + vesselId + '/durum', {method: 'POST', body: form})
+  fetch('/vessels/' + vesselId + '/durum', {method:'POST', body:form})
     .then(function(r) { return r.json(); })
     .then(function(d) { if (d.ok) location.reload(); });
 }
