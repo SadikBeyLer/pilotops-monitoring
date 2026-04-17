@@ -78,23 +78,7 @@ def dt_to_abs_hour(dt_str, base_date=None):
 # ROUTES
 # ════════════════════════════════════════════════════════════
 
-@app.route('/debug')
-def debug():
-    import os
-    db_path = DATABASE
-    db_exists = os.path.exists(db_path)
-    db_dir = os.path.dirname(db_path)
-    dir_exists = os.path.exists(db_dir)
-    try:
-        files = os.listdir(db_dir) if dir_exists else []
-    except Exception as e:
-        files = [str(e)]
-    return jsonify({
-        'DATABASE_PATH': db_path,
-        'db_exists': db_exists,
-        'dir_exists': dir_exists,
-        'dir_files': files
-    })
+
 
 @app.route('/')
 def index():
