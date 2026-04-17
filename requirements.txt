@@ -1,5 +1,6 @@
 anthropic
 flask
+gunicorn
 openpyxl
 pypdf
 python-dotenv
@@ -7,3 +8,4 @@ requests
 twilio
 google-api-python-client
 google-auth
+ 
