@@ -161,6 +161,23 @@ def watch_set_active():
     db.commit()
     return redirect(url_for('pilots'))
 
+# ── Pilot Güncelle (AJAX POST) ──────────────────────────────
+@app.route('/pilots/<int:pilot_id>/guncelle', methods=['POST'])
+def pilot_guncelle(pilot_id):
+    db = get_db()
+    ad_soyad = request.form.get('ad_soyad', '').strip()
+    telefon  = request.form.get('telefon', '').strip()
+    watch_id = request.form.get('watch_id', None)
+    if not ad_soyad:
+        return jsonify({'ok': False, 'hata': 'Ad soyad boş olamaz'})
+    watch_id = int(watch_id) if watch_id else None
+    db.execute(
+        "UPDATE pilots SET ad_soyad=?, telefon=?, watch_id=? WHERE id=?",
+        (ad_soyad, telefon, watch_id, pilot_id)
+    )
+    db.commit()
+    return jsonify({'ok': True})
+
 # ── Pilot Sil ───────────────────────────────────────────────
 @app.route('/pilots/<int:pilot_id>/sil', methods=['POST'])
 def pilot_sil(pilot_id):

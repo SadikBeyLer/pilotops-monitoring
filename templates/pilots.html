@@ -30,7 +30,6 @@
       </label>
       {% endfor %}
     </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
       <div class="form-group" style="margin-bottom:0">
         <label>Vardiya Başlangıç</label>
@@ -43,7 +42,6 @@
                value="{{ aktif_watch.bitis[:16] if aktif_watch else '' }}">
       </div>
     </div>
-
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button type="button" onclick="closeWatchPanel()" class="btn btn-secondary">İptal</button>
       <button type="submit" class="btn btn-primary">Kaydet</button>
@@ -51,12 +49,12 @@
   </form>
 </div>
 
-{# ── Sayfa Başlığı ──────────────────────────────────────── #}
+{# ── Sayfa Başlığı ── #}
 <div class="page-header">
   <div class="page-title">Kaptanlar</div>
 </div>
 
-{# ── Kaptan Tablosu ─────────────────────────────────────── #}
+{# ── Kaptan Tablosu ── #}
 <div class="card">
 <table style="width:100%;border-collapse:collapse" id="pilots-table">
   <thead>
@@ -66,7 +64,7 @@
       <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Telefon</th>
       <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Watch</th>
       <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Durum</th>
-      <th style="padding:10px 14px;width:70px"></th>
+      <th style="padding:10px 14px;width:160px"></th>
     </tr>
   </thead>
   <tbody id="pilots-tbody">
@@ -83,8 +81,7 @@
                  background:#F4F7FB;
                  border-top:{% if loop.index > 1 %}2px solid #dde8f5{% else %}none{% endif %};
                  border-bottom:1px solid #dde8f5">
-        <span style="font-size:11px;font-weight:700;text-transform:uppercase;
-                     letter-spacing:.1em;color:#185FA5">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#185FA5">
           {% if p.watch_no %}{{ p.watch_no }}{% else %}Watch Atanmamış{% endif %}
         </span>
       </td>
@@ -95,7 +92,7 @@
     <tr style="border-bottom:1px solid #f0f0f0" id="pilot-row-{{ p.id }}">
       <td style="padding:10px 14px;color:#bbb;font-size:13px;text-align:center">›</td>
       <td style="padding:10px 14px;font-weight:600;
-                 {% if p.izinde %}color:#aaa;text-decoration:line-through{% endif %}">
+                 {% if p.izinde %}color:#aaa{% endif %}">
         {{ p.ad_soyad }}
       </td>
       <td style="padding:10px 14px;color:{% if p.izinde %}#bbb{% else %}#666{% endif %}">
@@ -128,14 +125,77 @@
           {% endif %}
         </div>
       </td>
-      <td style="padding:10px 14px;text-align:center">
-        <button onclick="silOnay({{ p.id }}, '{{ p.ad_soyad }}')"
-                style="background:none;border:1px solid #ffb3b3;border-radius:7px;
-                       padding:3px 10px;color:#c0152a;font-size:12px;font-weight:600;cursor:pointer"
-                onmouseover="this.style.background='#fff0f0'"
-                onmouseout="this.style.background='none'">
-          Sil
-        </button>
+      <td style="padding:10px 14px;text-align:right">
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          {# Değiştir butonu #}
+          <button onclick="degistirAc({{ p.id }}, '{{ p.ad_soyad }}', '{{ p.telefon or '' }}', {{ p.watch_id or 'null' }})"
+                  style="background:none;border:1px solid #B5D4F4;border-radius:7px;
+                         padding:3px 10px;color:#185FA5;font-size:12px;font-weight:600;cursor:pointer"
+                  onmouseover="this.style.background='#EEF5FF'"
+                  onmouseout="this.style.background='none'">
+            Değiştir
+          </button>
+          {# Sil butonu #}
+          <button onclick="silOnay({{ p.id }}, '{{ p.ad_soyad }}')"
+                  style="background:none;border:1px solid #ffb3b3;border-radius:7px;
+                         padding:3px 10px;color:#c0152a;font-size:12px;font-weight:600;cursor:pointer"
+                  onmouseover="this.style.background='#fff0f0'"
+                  onmouseout="this.style.background='none'">
+            Sil
+          </button>
+        </div>
+      </td>
+    </tr>
+
+    {# Değiştir inline form satırı — her pilot için ayrı, başlangıçta gizli #}
+    <tr id="edit-row-{{ p.id }}" style="display:none;background:#FFFBF0;border-bottom:1px solid #FFE4A0">
+      <td colspan="6" style="padding:0">
+        <div style="display:flex;align-items:flex-end;gap:12px;padding:14px 16px">
+          <div style="display:flex;gap:10px;flex:1;flex-wrap:wrap;align-items:flex-end">
+
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:180px">
+              <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Ad Soyad *</label>
+              <input type="text" id="edit-ad-{{ p.id }}" value="{{ p.ad_soyad }}"
+                     style="border:1px solid #FFD060;border-radius:7px;padding:8px 11px;font-size:14px;width:100%;background:#fff">
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:150px">
+              <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Telefon</label>
+              <input type="tel" id="edit-tel-{{ p.id }}" value="{{ p.telefon or '' }}"
+                     style="border:1px solid #FFD060;border-radius:7px;padding:8px 11px;font-size:14px;width:100%;background:#fff">
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Watch</label>
+              <div style="display:flex;gap:6px">
+                {% for w in watches %}
+                <label id="edit-wlbl-{{ p.id }}-{{ w.id }}"
+                       style="display:flex;align-items:center;gap:5px;padding:7px 12px;
+                              border:1px solid {% if p.watch_id == w.id %}#185FA5{% else %}#d8d8d8{% endif %};
+                              border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;
+                              background:{% if p.watch_id == w.id %}#EEF5FF{% else %}#fff{% endif %};
+                              color:{% if p.watch_id == w.id %}#185FA5{% else %}#444{% endif %}">
+                  <input type="radio" name="edit_watch_{{ p.id }}" value="{{ w.id }}"
+                         {% if p.watch_id == w.id %}checked{% endif %}
+                         onchange="highlightEditWatch({{ p.id }}, {{ w.id }})"
+                         style="width:13px;height:13px;accent-color:#185FA5">
+                  {{ w.watch_no }}
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <button type="button" onclick="degistirKapat({{ p.id }})" class="btn btn-secondary" style="padding:8px 14px">İptal</button>
+            <button type="button" onclick="degistirKaydet({{ p.id }})"
+                    style="background:#b85c00;color:#fff;border:none;border-radius:8px;
+                           padding:8px 16px;font-size:15px;font-weight:500;cursor:pointer">
+              Onayla
+            </button>
+          </div>
+        </div>
+        <div id="edit-error-{{ p.id }}" style="display:none;padding:6px 16px 10px;color:#c0152a;font-size:13px"></div>
       </td>
     </tr>
 
@@ -145,68 +205,69 @@
   </tr>
   {% endfor %}
 
-  {# ── Inline Form Satırı ── #}
-  <tr id="inline-form-row" style="display:none;background:#F0F6FF;border-bottom:1px solid #d0e4ff">
-    <td colspan="6" style="padding:0">
-      <div style="display:flex;align-items:flex-end;gap:12px;padding:14px 16px">
-        <div style="display:flex;gap:10px;flex:1;flex-wrap:wrap;align-items:flex-end">
-
-          <div style="display:flex;flex-direction:column;gap:4px;min-width:180px">
-            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Ad Soyad *</label>
-            <input type="text" id="new-ad-soyad" placeholder="Ahmet Yılmaz"
-                   style="border:1px solid #B5D4F4;border-radius:7px;padding:8px 11px;font-size:14px;width:100%;background:#fff">
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:4px;min-width:150px">
-            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Telefon</label>
-            <input type="tel" id="new-telefon" placeholder="0 (532) 000 0000"
-                   style="border:1px solid #B5D4F4;border-radius:7px;padding:8px 11px;font-size:14px;width:100%;background:#fff">
-          </div>
-
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Watch</label>
-            <div style="display:flex;gap:6px">
-              {% for w in watches %}
-              <label id="new-wlbl-{{ w.id }}"
-                     style="display:flex;align-items:center;gap:5px;padding:7px 12px;
-                            border:1px solid {% if w.aktif %}#185FA5{% else %}#d8d8d8{% endif %};
-                            border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;
-                            background:{% if w.aktif %}#EEF5FF{% else %}#fff{% endif %};
-                            color:{% if w.aktif %}#185FA5{% else %}#444{% endif %}">
-                <input type="radio" name="new_watch_id" value="{{ w.id }}"
-                       {% if w.aktif %}checked{% endif %}
-                       onchange="highlightNewWatch({{ w.id }})"
-                       style="width:13px;height:13px;accent-color:#185FA5">
-                {{ w.watch_no }}
-              </label>
-              {% endfor %}
-            </div>
-          </div>
-
-        </div>
-        <div style="display:flex;gap:6px;flex-shrink:0">
-          <button type="button" onclick="hideInlineForm()" class="btn btn-secondary" style="padding:8px 14px">İptal</button>
-          <button type="button" onclick="saveInlinePilot()" class="btn btn-primary" style="padding:8px 16px">Kaydet</button>
-        </div>
-      </div>
-      <div id="inline-error" style="display:none;padding:6px 16px 10px;color:#c0152a;font-size:13px"></div>
-    </td>
-  </tr>
-
-  {# ── + Pilot Ekle Butonu ── #}
-  <tr id="add-btn-row">
-    <td colspan="6" style="padding:10px 14px">
-      <button onclick="showInlineForm()" id="add-pilot-btn"
-              style="background:none;border:1px dashed #B5D4F4;border-radius:8px;
-                     padding:8px 18px;color:#185FA5;font-size:14px;font-weight:600;
-                     cursor:pointer;width:100%;text-align:left">
-        + Pilot Ekle
-      </button>
-    </td>
-  </tr>
-
   </tbody>
 </table>
+
+{# ── Pilot Ekle — tablodan ayrı, alt kısım ── #}
+<div style="border-top:2px solid #e8e8e8;background:#fff">
+
+  {# Inline Form #}
+  <div id="inline-form-row" style="display:none;background:#F0F6FF;border-bottom:1px solid #d0e4ff">
+    <div style="display:flex;align-items:flex-end;gap:12px;padding:14px 16px">
+      <div style="display:flex;gap:10px;flex:1;flex-wrap:wrap;align-items:flex-end">
+
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:180px">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Ad Soyad *</label>
+          <input type="text" id="new-ad-soyad" placeholder="Ahmet Yılmaz"
+                 style="border:1px solid #B5D4F4;border-radius:7px;padding:8px 11px;font-size:14px;width:100%;background:#fff">
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:150px">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Telefon</label>
+          <input type="tel" id="new-telefon" placeholder="0 (532) 000 0000"
+                 style="border:1px solid #B5D4F4;border-radius:7px;padding:8px 11px;font-size:14px;width:100%;background:#fff">
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Watch</label>
+          <div style="display:flex;gap:6px">
+            {% for w in watches %}
+            <label id="new-wlbl-{{ w.id }}"
+                   style="display:flex;align-items:center;gap:5px;padding:7px 12px;
+                          border:1px solid {% if w.aktif %}#185FA5{% else %}#d8d8d8{% endif %};
+                          border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;
+                          background:{% if w.aktif %}#EEF5FF{% else %}#fff{% endif %};
+                          color:{% if w.aktif %}#185FA5{% else %}#444{% endif %}">
+              <input type="radio" name="new_watch_id" value="{{ w.id }}"
+                     {% if w.aktif %}checked{% endif %}
+                     onchange="highlightNewWatch({{ w.id }})"
+                     style="width:13px;height:13px;accent-color:#185FA5">
+              {{ w.watch_no }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button type="button" onclick="hideInlineForm()" class="btn btn-secondary" style="padding:8px 14px">İptal</button>
+        <button type="button" onclick="saveInlinePilot()" class="btn btn-primary" style="padding:8px 16px">Kaydet</button>
+      </div>
+    </div>
+    <div id="inline-error" style="display:none;padding:6px 16px 10px;color:#c0152a;font-size:13px"></div>
+  </div>
+
+  {# + Pilot Ekle butonu #}
+  <div id="add-btn-row" style="padding:10px 14px">
+    <button onclick="showInlineForm()" id="add-pilot-btn"
+            style="background:none;border:1px dashed #B5D4F4;border-radius:8px;
+                   padding:8px 18px;color:#185FA5;font-size:14px;font-weight:600;
+                   cursor:pointer;width:100%;text-align:left">
+      + Pilot Ekle
+    </button>
+  </div>
+
+</div>
 </div>
 
 {# ── Silme Onay Modalı ── #}
@@ -231,6 +292,7 @@
 </div>
 
 <script>
+// ── Sil Modal ────────────────────────────────────────────────
 function silOnay(id, isim) {
   document.getElementById('sil-isim').textContent = isim;
   document.getElementById('sil-form').action = '/pilots/' + id + '/sil';
@@ -242,6 +304,56 @@ function silIptal() {
 document.getElementById('sil-modal').addEventListener('click', function(e){
   if (e.target === this) silIptal();
 });
+
+// ── Değiştir ─────────────────────────────────────────────────
+function degistirAc(id) {
+  // Diğer açık değiştir formlarını kapat
+  document.querySelectorAll('[id^="edit-row-"]').forEach(function(el){
+    el.style.display = 'none';
+  });
+  document.getElementById('edit-row-' + id).style.display = 'table-row';
+  document.getElementById('edit-ad-' + id).focus();
+}
+function degistirKapat(id) {
+  document.getElementById('edit-row-' + id).style.display = 'none';
+}
+function highlightEditWatch(pilotId, watchId) {
+  [1,2,3].forEach(function(i){
+    var lbl = document.getElementById('edit-wlbl-' + pilotId + '-' + i);
+    if (!lbl) return;
+    if (i === watchId) {
+      lbl.style.borderColor='#185FA5'; lbl.style.background='#EEF5FF'; lbl.style.color='#185FA5';
+    } else {
+      lbl.style.borderColor='#d8d8d8'; lbl.style.background='#fff'; lbl.style.color='#444';
+    }
+  });
+}
+function degistirKaydet(id) {
+  var adSoyad = document.getElementById('edit-ad-' + id).value.trim();
+  var telefon = document.getElementById('edit-tel-' + id).value.trim();
+  var watchEl = document.querySelector('input[name="edit_watch_' + id + '"]:checked');
+  var watchId = watchEl ? watchEl.value : '';
+  var errDiv  = document.getElementById('edit-error-' + id);
+  if (!adSoyad) {
+    errDiv.textContent = 'Ad soyad boş olamaz.';
+    errDiv.style.display = 'block';
+    return;
+  }
+  errDiv.style.display = 'none';
+  var form = new FormData();
+  form.append('ad_soyad', adSoyad);
+  form.append('telefon', telefon);
+  form.append('watch_id', watchId);
+  fetch('/pilots/' + id + '/guncelle', { method: 'POST', body: form })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.ok) { window.location.reload(); }
+      else { errDiv.textContent = data.hata || 'Hata oluştu.'; errDiv.style.display = 'block'; }
+    })
+    .catch(function(){ errDiv.textContent = 'Bağlantı hatası.'; errDiv.style.display = 'block'; });
+}
+
+// ── Watch Panel ──────────────────────────────────────────────
 function openWatchPanel() {
   document.getElementById('watch-panel').style.display = 'block';
   window.scrollTo({top:0, behavior:'smooth'});
@@ -257,17 +369,19 @@ function selectWatch(id) {
     else { lbl.style.borderColor='#d8d8d8'; lbl.style.background='#fff'; if(txt) txt.style.color='#444'; if(akt){akt.textContent='Pasif';akt.style.background='#f0f0f0';akt.style.color='#888';} }
   });
 }
+
+// ── Inline Ekle ──────────────────────────────────────────────
 function showInlineForm() {
-  document.getElementById('inline-form-row').style.display='table-row';
-  document.getElementById('add-btn-row').style.display='none';
+  document.getElementById('inline-form-row').style.display = 'block';
+  document.getElementById('add-btn-row').style.display = 'none';
   document.getElementById('new-ad-soyad').focus();
 }
 function hideInlineForm() {
-  document.getElementById('inline-form-row').style.display='none';
-  document.getElementById('add-btn-row').style.display='table-row';
-  document.getElementById('new-ad-soyad').value='';
-  document.getElementById('new-telefon').value='';
-  document.getElementById('inline-error').style.display='none';
+  document.getElementById('inline-form-row').style.display = 'none';
+  document.getElementById('add-btn-row').style.display = 'block';
+  document.getElementById('new-ad-soyad').value = '';
+  document.getElementById('new-telefon').value = '';
+  document.getElementById('inline-error').style.display = 'none';
 }
 function highlightNewWatch(id) {
   [1,2,3].forEach(function(i){
