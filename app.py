@@ -38,16 +38,10 @@ def init_db():
 SAMANDIRALAR = ['wimba','g.nato','k.nato','sa/sa','petgaz','b.aygaz','k.aygaz','milangaz']
 
 def detect_is_tipi(from_nokta: str, to_nokta: str) -> tuple:
-    """
-    From/To'ya göre iş tipini ve k çarpanını belirler.
-    Döner: (is_tipi, k_carpan)
-    """
     f = from_nokta.lower().strip()
     t = to_nokta.lower().strip()
-
     def is_sam(s):
         return any(sam in s for sam in SAMANDIRALAR)
-
     if is_sam(f):
         return ('buoy_kalkis', 0.7)
     if is_sam(t):
@@ -58,9 +52,7 @@ def detect_is_tipi(from_nokta: str, to_nokta: str) -> tuple:
         return ('kalkis', 0.7)
     return ('yanasma', 1.0)
 
-# ── Yardımcı: datetime string → float saat ──────────────────
 def dt_to_abs_hour(dt_str: str, base_date: str = None) -> float:
-    """ISO datetime string'i mutlak saate çevirir."""
     dt = datetime.fromisoformat(dt_str)
     if base_date:
         base = datetime.fromisoformat(base_date)
@@ -72,7 +64,7 @@ def dt_to_abs_hour(dt_str: str, base_date: str = None) -> float:
 # ROUTES
 # ════════════════════════════════════════════════════════════
 
-# ── Ana Sayfa: Kaptan listesi ────────────────────────────────
+# ── Ana Sayfa ────────────────────────────────────────────────
 @app.route('/')
 def index():
     db = get_db()
@@ -86,26 +78,137 @@ def index():
 @app.route('/pilots')
 def pilots():
     db = get_db()
-    pilots = db.execute(
-        "SELECT * FROM pilots WHERE aktif=1 ORDER BY ad_soyad"
-    ).fetchall()
-    return render_template('pilots.html', pilots=pilots)
+    watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
+    aktif_watch = db.execute("SELECT * FROM watches WHERE aktif=1 LIMIT 1").fetchone()
 
+    # Tüm pilotları watch_id → harf sırasıyla çek
+    # watch_id NULL olanlar en sona
+    pilots_raw = db.execute("""
+        SELECT p.*,
+               w.watch_no,
+               COALESCE(
+                   (SELECT 1 FROM pilot_izin pi
+                    WHERE pi.pilot_id = p.id AND pi.aktif = 1 LIMIT 1), 0
+               ) AS izinde
+        FROM pilots p
+        LEFT JOIN watches w ON w.id = p.watch_id
+        WHERE p.aktif = 1
+        ORDER BY COALESCE(p.watch_id, 9999), p.ad_soyad
+    """).fetchall()
+
+    return render_template('pilots.html',
+                           pilots=pilots_raw,
+                           watches=watches,
+                           aktif_watch=aktif_watch)
+
+# ── Inline Pilot Ekle (AJAX POST) ───────────────────────────
+@app.route('/pilots/add-inline', methods=['POST'])
+def pilot_add_inline():
+    db = get_db()
+    ad_soyad = request.form.get('ad_soyad', '').strip()
+    telefon  = request.form.get('telefon', '').strip()
+    watch_id = request.form.get('watch_id', None)
+    if not ad_soyad:
+        return jsonify({'ok': False, 'hata': 'Ad soyad boş olamaz'})
+    watch_id = int(watch_id) if watch_id else None
+    db.execute(
+        "INSERT INTO pilots (port_id, ad_soyad, telefon, watch_id) VALUES (?,?,?,?)",
+        (1, ad_soyad, telefon, watch_id)
+    )
+    db.commit()
+    return jsonify({'ok': True})
+
+# ── Eski pilot_add (geriye uyumluluk) ────────────────────────
 @app.route('/pilots/add', methods=['GET','POST'])
 def pilot_add():
     db = get_db()
     if request.method == 'POST':
+        ad_soyad = request.form['ad_soyad']
+        telefon  = request.form.get('telefon','')
+        watch_id = request.form.get('watch_id', None)
+        watch_id = int(watch_id) if watch_id else None
         db.execute(
-            "INSERT INTO pilots (port_id, ad_soyad, telefon) VALUES (?,?,?)",
-            (1, request.form['ad_soyad'], request.form.get('telefon',''))
+            "INSERT INTO pilots (port_id, ad_soyad, telefon, watch_id) VALUES (?,?,?,?)",
+            (1, ad_soyad, telefon, watch_id)
         )
-        watch_id = int(request.form.get('watch_id', 2))
-        db.execute("UPDATE watches SET aktif=0")
-        db.execute("UPDATE watches SET aktif=1 WHERE id=?", (watch_id,))
         db.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for('pilots'))
     watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
     return render_template('pilot_add.html', watches=watches)
+
+# ── Watch Geçişi ─────────────────────────────────────────────
+@app.route('/watches/set-active', methods=['POST'])
+def watch_set_active():
+    """
+    Seçilen watch'ı aktif yap, diğerlerini pasif yap.
+    Tarih aralığını da güncelle (operatör girişi).
+    """
+    db = get_db()
+    watch_id   = int(request.form['watch_id'])
+    baslangic  = request.form.get('baslangic', '')
+    bitis      = request.form.get('bitis', '')
+
+    # Tüm watchları pasif yap
+    db.execute("UPDATE watches SET aktif=0")
+    # Seçileni aktif yap + tarihleri güncelle
+    if baslangic and bitis:
+        db.execute(
+            "UPDATE watches SET aktif=1, baslangic=?, bitis=? WHERE id=?",
+            (baslangic, bitis, watch_id)
+        )
+    else:
+        db.execute("UPDATE watches SET aktif=1 WHERE id=?", (watch_id,))
+    db.commit()
+    return redirect(url_for('pilots'))
+
+# ── İzin Toggle ──────────────────────────────────────────────
+@app.route('/pilots/<int:pilot_id>/izin-toggle', methods=['POST'])
+def pilot_izin_toggle(pilot_id):
+    """
+    Pilotun izin durumunu aç/kapat.
+    """
+    db = get_db()
+    watch = db.execute("SELECT id FROM watches WHERE aktif=1 LIMIT 1").fetchone()
+    watch_id = watch['id'] if watch else 1
+
+    # Mevcut aktif izin var mı?
+    mevcut = db.execute(
+        "SELECT id FROM pilot_izin WHERE pilot_id=? AND aktif=1 LIMIT 1",
+        (pilot_id,)
+    ).fetchone()
+
+    if mevcut:
+        # İzni kapat
+        db.execute(
+            "UPDATE pilot_izin SET aktif=0, bitis=? WHERE id=?",
+            (datetime.now().isoformat(timespec='minutes'), mevcut['id'])
+        )
+    else:
+        # İzni aç
+        db.execute(
+            "INSERT INTO pilot_izin (pilot_id, watch_id, baslangic, aktif) VALUES (?,?,?,1)",
+            (pilot_id, watch_id, datetime.now().isoformat(timespec='minutes'))
+        )
+    db.commit()
+    return redirect(url_for('pilots'))
+
+# ── API: Pilot listesi (pilots sayfası için AJAX) ────────────
+@app.route('/api/pilots-list')
+def api_pilots_list():
+    db = get_db()
+    rows = db.execute("""
+        SELECT p.id, p.ad_soyad, p.telefon, p.watch_id,
+               w.watch_no,
+               COALESCE(
+                   (SELECT 1 FROM pilot_izin pi
+                    WHERE pi.pilot_id = p.id AND pi.aktif = 1 LIMIT 1), 0
+               ) AS izinde
+        FROM pilots p
+        LEFT JOIN watches w ON w.id = p.watch_id
+        WHERE p.aktif = 1
+        ORDER BY COALESCE(p.watch_id, 9999), p.ad_soyad
+    """).fetchall()
+    return jsonify([dict(r) for r in rows])
 
 # ── Gemiler ──────────────────────────────────────────────────
 @app.route('/vessels')
@@ -162,16 +265,13 @@ def operation_add():
         draft_bas  = float(request.form.get('draft_bas',0) or 0)
         draft_kic  = float(request.form.get('draft_kic',0) or 0)
 
-        # İş tipini belirle
         is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
 
-        # Aktif nöbet
         watch = db.execute(
             "SELECT id FROM watches WHERE aktif=1 ORDER BY baslangic DESC LIMIT 1"
         ).fetchone()
         watch_id = watch['id'] if watch else 1
 
-        # Fatigue hesapla
         base = off_st[:10] + 'T00:00:00'
         off_h  = dt_to_abs_hour(off_st, base)
         pob_h  = dt_to_abs_hour(pob,    base)
@@ -181,13 +281,11 @@ def operation_add():
         if poff_h < pob_h:  poff_h += 24
         if on_h   < poff_h: on_h   += 24
 
-        # Geminin GRT'si
         vessel = db.execute("SELECT grt FROM vessels WHERE id=?", (vessel_id,)).fetchone()
         grt = vessel['grt'] if vessel else 8000
 
         katki = job_contrib(off_h, pob_h, poff_h, on_h, is_tipi, grt)
 
-        # Önceki toplam skoru al
         prev = db.execute(
             "SELECT fatigue_toplam, on_station FROM operations WHERE pilot_id=? ORDER BY olusturma DESC LIMIT 1",
             (pilot_id,)
@@ -205,7 +303,6 @@ def operation_add():
         color, durum = fatigue_color(toplam)
         score_fmt = format_score(toplam)
 
-        # Zorunlu atama kontrolü
         zorunlu = 1 if norm >= 90 else 0
         onaylayan = request.form.get('onaylayan', '') if norm >= 75 else ''
 
@@ -230,7 +327,7 @@ def operation_add():
     return render_template('operation_add.html', pilots=pilots, vessels=vessels,
                            samandiralar=SAMANDIRALAR)
 
-# ── API: Kaptan fatigue skoru (AJAX için) ────────────────────
+# ── API: Kaptan fatigue skoru ────────────────────────────────
 @app.route('/api/pilot/<int:pilot_id>/fatigue')
 def api_pilot_fatigue(pilot_id):
     db = get_db()
@@ -247,7 +344,7 @@ def api_pilot_fatigue(pilot_id):
         'score_fmt': format_score(row['fatigue_toplam'])
     })
 
-# ── API: İş tipi tespiti (AJAX için) ────────────────────────
+# ── API: İş tipi tespiti ─────────────────────────────────────
 @app.route('/api/detect-tip')
 def api_detect_tip():
     from_n = request.args.get('from','')
@@ -262,7 +359,6 @@ def api_detect_tip():
     label, color, bg = labels.get(tip, ('Belirsiz', '#888', '#eee'))
     return jsonify({'tip': tip, 'k': k, 'label': label, 'color': color, 'bg': bg})
 
-# ── Uygulama başlangıcı ──────────────────────────────────────
 # ── Pilot Jobs ───────────────────────────────────────────────
 @app.route('/pilots/<int:pilot_id>/jobs')
 def pilot_jobs(pilot_id):
@@ -276,13 +372,14 @@ def pilot_jobs(pilot_id):
         ORDER BY o.off_station DESC
     """, (pilot_id,)).fetchall()
     return render_template('pilot_jobs.html', pilot=pilot, jobs=jobs)
+
+# ── Uygulama başlangıcı ──────────────────────────────────────
 if __name__ == '__main__':
     if not os.path.exists(DATABASE):
         init_db()
         print(f"Veritabanı oluşturuldu: {DATABASE}")
     app.run(debug=True, port=5001)
 
-# Railway için — her başlangıçta DB yoksa oluştur
 with app.app_context():
     if not os.path.exists(DATABASE):
         init_db()

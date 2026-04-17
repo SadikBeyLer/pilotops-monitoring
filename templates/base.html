@@ -14,7 +14,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .nav-link:hover{color:#1a1a1a}
 .nav-link.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:600}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
-.watch-badge{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4;border-radius:20px;padding:4px 14px;font-size:14px;font-weight:600}
+
+/* Watch butonu — tıklanabilir badge */
+.watch-btn{
+  background:#E6F1FB;color:#0C447C;
+  border:1px solid #B5D4F4;border-radius:20px;
+  padding:5px 16px;font-size:14px;font-weight:600;
+  cursor:pointer;text-decoration:none;
+  transition:background .15s;
+  display:flex;align-items:center;gap:6px;
+}
+.watch-btn:hover{background:#cfe4f8}
+.watch-btn-arrow{font-size:11px;opacity:.7}
+
 .container{max-width:1200px;margin:0 auto;padding:24px}
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .page-title{font-size:20px;font-weight:700}
@@ -46,13 +58,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <body>
 <nav class="navbar">
   <a href="/" class="nav-brand">Pilot<span>Ops</span></a>
-  <a href="/vessels" class="nav-link {% if request.endpoint=='vessels' %}active{% endif %}">Gemiler</a>
+  <a href="/vessels" class="nav-link {% if request.endpoint=='vessels' or request.endpoint=='vessel_add' %}active{% endif %}">Gemiler</a>
   <div class="nav-right">
     <a href="/pilots" class="nav-link {% if request.endpoint=='pilots' or request.endpoint=='pilot_add' %}active{% endif %}">Pilots</a>
+
+    {# Watch butonu — sadece pilots sayfasında aktif, diğerlerinde de göster #}
     {% if watch %}
-    <span class="watch-badge">{{ watch.watch_no }} — Aktif</span>
+    {% if request.endpoint == 'pilots' %}
+    {# Pilots sayfasındayken: tıklayınca panel açılır (JS ile) #}
+    <button type="button" class="watch-btn" onclick="openWatchPanel()">
+      {{ watch.watch_no }}
+      <span class="watch-btn-arrow">▼</span>
+    </button>
+    {% else %}
+    {# Diğer sayfalarda: pilots sayfasına yönlendirir #}
+    <a href="/pilots" class="watch-btn">
+      {{ watch.watch_no }}
+      <span class="watch-btn-arrow">›</span>
+    </a>
     {% endif %}
-</div>
+    {% endif %}
+  </div>
 </nav>
 <div class="container">
   {% block content %}{% endblock %}
