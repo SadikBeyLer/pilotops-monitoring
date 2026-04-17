@@ -3,176 +3,146 @@
 {% block content %}
 
 <div class="page-header">
-  <div>
+  <div style="display:flex;align-items:center;gap:12px">
     <div class="page-title">Live Ops</div>
-    <div style="font-size:13px;color:#888;margin-top:3px">En yorgundan en fite sıralı</div>
-  </div>
-</div>
-
-<!-- Drive Popup -->
-<div id="drive-popup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;align-items:center;justify-content:center;">
-  <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.35)" onclick="closePopup()"></div>
-  <div style="position:relative;background:#fff;border-radius:14px;padding:28px 32px;min-width:300px;box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:1001">
-    <div id="popup-gemi" style="font-size:17px;font-weight:700;color:#185FA5;margin-bottom:18px;text-align:center"></div>
-    <div style="display:flex;gap:12px;justify-content:center">
-      <button onclick="openDrive('talimat')" style="padding:10px 22px;background:#185FA5;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">📄 Talimat</button>
-      <button onclick="openDrive('ordino')" style="padding:10px 22px;background:#1a7a2e;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">📋 Ordino</button>
-    </div>
-    <div id="popup-result" style="margin-top:16px;text-align:center;font-size:13px;color:#888;min-height:20px"></div>
-    <div style="text-align:center;margin-top:14px">
-      <span onclick="closePopup()" style="font-size:12px;color:#aaa;cursor:pointer">Kapat</span>
-    </div>
+    {% if watch %}
+    <span style="background:#EAF3DE;color:#27500A;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:700">
+      {{ watch.watch_no }} — Aktif
+    </span>
+    {% endif %}
   </div>
 </div>
 
 <div class="card">
 <table style="width:100%;border-collapse:collapse">
   <thead>
-    <tr style="background:#F8F8F8;border-bottom:1px solid #e8e8e8">
-      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">#</th>
-      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Pilot</th>
-      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Jobs</th>
-      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Working Hrs</th>
-      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">R/12</th>
-      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Fatigue</th>
-      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">MLC</th>
-      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Active Vessel</th>
-      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">Status</th>
+    <tr style="background:#F4F7FB;border-bottom:2px solid #dde8f5">
+      <th style="padding:12px 14px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555;width:36px">#</th>
+      <th style="padding:12px 14px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Pilot</th>
+      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Jobs</th>
+      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Working Hrs</th>
+      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">R/12</th>
+      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Fatigue</th>
+      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">MLC</th>
+      <th style="padding:12px 14px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Active Vessel</th>
+      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Status</th>
     </tr>
   </thead>
   <tbody>
   {% for p in pilots %}
-  {% set norm = p.son_fatigue_norm or 0 %}
+  {% set norm  = p.son_fatigue_norm or 0 %}
   {% set durum = p.fatigue_durum or 'FIT' %}
+  {% set wh    = p.calisma_saati or 0 %}
+  {% set r12   = 12 - wh %}
+  {% set wh24  = p.calisma_24h or 0 %}
+
+  {# Fatigue renk/badge #}
   {% if norm > 100 %}
-    {% set row_bg = '#FFF0F0' %}
-    {% set badge_cls = 'badge-darkred' %}
-    {% set bar_color = '#7a0010' %}
+    {% set row_bg='#FFF0F0' %}{% set badge_cls='badge-darkred' %}{% set bar_color='#7a0010' %}
   {% elif norm >= 90 %}
-    {% set row_bg = '#FFF0F0' %}
-    {% set badge_cls = 'badge-red' %}
-    {% set bar_color = '#c0152a' %}
+    {% set row_bg='#FFF0F0' %}{% set badge_cls='badge-red' %}{% set bar_color='#c0152a' %}
   {% elif norm >= 75 %}
-    {% set row_bg = '#FFF5EE' %}
-    {% set badge_cls = 'badge-red' %}
-    {% set bar_color = '#c0152a' %}
+    {% set row_bg='#FFF5EE' %}{% set badge_cls='badge-red' %}{% set bar_color='#c0152a' %}
   {% elif norm >= 50 %}
-    {% set row_bg = '#FFFBF0' %}
-    {% set badge_cls = 'badge-orange' %}
-    {% set bar_color = '#b85c00' %}
+    {% set row_bg='#FFFBF0' %}{% set badge_cls='badge-orange' %}{% set bar_color='#b85c00' %}
   {% elif norm >= 30 %}
-    {% set row_bg = '#fff' %}
-    {% set badge_cls = 'badge-blue' %}
-    {% set bar_color = '#185FA5' %}
+    {% set row_bg='#fff' %}{% set badge_cls='badge-blue' %}{% set bar_color='#185FA5' %}
   {% else %}
-    {% set row_bg = '#fff' %}
-    {% set badge_cls = 'badge-green' %}
-    {% set bar_color = '#1a7a2e' %}
+    {% set row_bg='#fff' %}{% set badge_cls='badge-green' %}{% set bar_color='#1a7a2e' %}
   {% endif %}
-  {% set wh = p.calisma_saati or 0 %}
-  {% set r12 = 12 - wh %}
-  <tr style="background:{{ row_bg }};border-bottom:1px solid #f0f0f0">
-    <td style="padding:10px 14px;color:#aaa;font-size:14px">{{ loop.index }}</td>
-    <td style="padding:10px 14px">
-      <div style="font-weight:700;font-size:15px">{{ p.ad_soyad }}</div>
+
+  {# MLC 2006 kontrolü: günlük max 14 saat #}
+  {% set mlc_ok = wh24 <= 14 %}
+
+  <tr style="background:{{ row_bg }};border-bottom:1px solid #f0f0f0;cursor:pointer"
+      onclick="window.location='/pilots/{{ p.pilot_id }}/jobs'">
+
+    {# # #}
+    <td style="padding:11px 14px;color:#bbb;font-size:14px">{{ loop.index }}</td>
+
+    {# Pilot adı — telefon yok #}
+    <td style="padding:11px 14px">
+      <div style="font-weight:700;font-size:15px;color:#1a1a1a">{{ p.ad_soyad }}</div>
     </td>
-    <td style="padding:10px 14px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
-    <td style="padding:10px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
-    <td style="padding:10px 14px;text-align:center;font-size:15px;font-weight:600;color:{% if r12 < 2 %}#c0152a{% elif r12 < 4 %}#b85c00{% else %}#555{% endif %}">
+
+    {# Jobs #}
+    <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:700">
+      {{ p.is_sayisi or 0 }}
+    </td>
+
+    {# Working Hours #}
+    <td style="padding:11px 14px;text-align:center;font-size:15px">
+      {{ '%.2f'|format(wh) }}
+    </td>
+
+    {# R/12 #}
+    <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:600;
+               color:{% if r12 < 2 %}#c0152a{% elif r12 < 4 %}#b85c00{% else %}#555{% endif %}">
       {{ '%.2f'|format(r12) }}
     </td>
-    <td style="padding:10px 14px;text-align:center;min-width:110px">
-      <div style="font-size:18px;font-weight:800;color:{{ bar_color }}">
+
+    {# Fatigue skoru + bar #}
+    <td style="padding:11px 14px;text-align:center;min-width:100px">
+      <div style="font-size:20px;font-weight:800;color:{{ bar_color }}">
         {{ norm }}{% if norm > 100 %}+{% endif %}
       </div>
-      <div class="score-bar" style="width:80px;margin:4px auto 0">
+      <div class="score-bar" style="width:76px;margin:4px auto 0">
         <div class="score-bar-fill" style="width:{{ [norm,100]|min }}%;background:{{ bar_color }}"></div>
       </div>
     </td>
-    <td style="padding:10px 14px;text-align:center">
-      {% if p.mlc_ok %}
-        <span style="color:#1a7a2e;font-size:16px">✓</span>
+
+    {# MLC 2006 tik/çarpı #}
+    <td style="padding:11px 14px;text-align:center">
+      {% if mlc_ok %}
+      <span style="font-size:18px;color:#1a7a2e" title="MLC 2006 Uygun — 24s çalışma: {{ '%.1f'|format(wh24) }}s">✓</span>
       {% else %}
-        <span style="color:#c0152a;font-size:16px">✗</span>
+      <span style="font-size:18px;color:#c0152a" title="MLC 2006 İhlal — 24s çalışma: {{ '%.1f'|format(wh24) }}s (max 14s)">✗</span>
       {% endif %}
     </td>
-    <td style="padding:10px 14px">
+
+    {# Active Vessel + detaylar #}
+    <td style="padding:11px 14px;min-width:180px">
       {% if p.aktif_gemi %}
-        <div>
-          <span onclick="openPopup('{{ p.aktif_gemi }}')"
-                style="font-size:15px;font-weight:700;color:#185FA5;cursor:pointer;text-decoration:underline;text-underline-offset:3px">
-            {{ p.aktif_gemi }}
-          </span>
-          {% if p.aktif_loa or p.aktif_grt %}
-          <span style="font-size:12px;color:#bbb;margin-left:8px;font-weight:400">
-            {% if p.aktif_loa %}LOA:{{ p.aktif_loa|int }}m{% endif %}
-            {% if p.aktif_grt %}&nbsp;GT:{{ p.aktif_grt|int }}{% endif %}
-          </span>
-          {% endif %}
-        </div>
-        <div style="font-size:12px;color:#bbb;margin-top:3px">
-          {% if p.aktif_from %}Fr:{{ p.aktif_from }}{% endif %}
-          {% if p.aktif_to %}&nbsp;To:{{ p.aktif_to }}{% endif %}
-          &nbsp;BT:{% if p.aktif_bt %}<span style="color:#1a7a2e">Yes</span>{% else %}<span style="color:#bbb">No</span>{% endif %}
-        </div>
+      <div style="font-size:15px;font-weight:700;color:#185FA5">{{ p.aktif_gemi }}</div>
+      <div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:6px">
+        {% if p.aktif_loa %}
+        <span style="font-size:11px;color:#999">LOA: <span style="color:#666">{{ p.aktif_loa|int }}m</span></span>
+        {% endif %}
+        {% if p.aktif_grt %}
+        <span style="font-size:11px;color:#999">GT: <span style="color:#666">{{ p.aktif_grt|int }}</span></span>
+        {% endif %}
+        {% if p.aktif_from %}
+        <span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ p.aktif_from }}</span></span>
+        {% endif %}
+        {% if p.aktif_to %}
+        <span style="font-size:11px;color:#999">To: <span style="color:#666">{{ p.aktif_to }}</span></span>
+        {% endif %}
+      </div>
       {% else %}
-        <span style="color:#ccc">—</span>
+      <span style="color:#ccc">—</span>
       {% endif %}
     </td>
-    <td style="padding:10px 14px;text-align:center">
+
+    {# Status badge #}
+    <td style="padding:11px 14px;text-align:center">
       <span class="badge {{ badge_cls }}">{{ durum }}</span>
     </td>
+
   </tr>
   {% else %}
   <tr>
-    <td colspan="9" style="padding:32px;text-align:center;color:#aaa;font-size:15px">
-      Henüz kaptan eklenmemiş — <a href="/pilots/add" style="color:#185FA5">kaptan ekle</a>
+    <td colspan="9" style="padding:40px;text-align:center;color:#aaa;font-size:15px">
+      {% if watch %}
+        {{ watch.watch_no }} için aktif pilot yok —
+        <a href="/pilots" style="color:#185FA5">Pilots sayfasına git</a>
+      {% else %}
+        Watch seçilmemiş —
+        <a href="/pilots" style="color:#185FA5">Watch seç</a>
+      {% endif %}
     </td>
   </tr>
   {% endfor %}
   </tbody>
 </table>
 </div>
-
-<script>
-var _currentGemi = '';
-
-function openPopup(gemiAdi) {
-  _currentGemi = gemiAdi;
-  document.getElementById('popup-gemi').textContent = gemiAdi.toUpperCase();
-  document.getElementById('popup-result').innerHTML = '';
-  var popup = document.getElementById('drive-popup');
-  popup.style.display = 'flex';
-}
-
-function closePopup() {
-  document.getElementById('drive-popup').style.display = 'none';
-  _currentGemi = '';
-}
-
-function openDrive(tip) {
-  if (!_currentGemi) return;
-  var resultDiv = document.getElementById('popup-result');
-  resultDiv.innerHTML = '<span style="color:#888">Aranıyor...</span>';
-
-  fetch('/api/drive/' + encodeURIComponent(_currentGemi) + '/' + tip)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if (data.link) {
-        resultDiv.innerHTML = '<a href="' + data.link + '" target="_blank" style="color:#185FA5;font-weight:600">Dosyayı Aç →</a>';
-        window.open(data.link, '_blank');
-      } else {
-        resultDiv.innerHTML = '<span style="color:#c0152a">' + (data.error || 'Dosya bulunamadı') + '</span>';
-      }
-    })
-    .catch(function(){
-      resultDiv.innerHTML = '<span style="color:#c0152a">Bağlantı hatası</span>';
-    });
-}
-
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') closePopup();
-});
-</script>
-
 {% endblock %}

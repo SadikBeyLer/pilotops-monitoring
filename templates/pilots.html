@@ -193,7 +193,7 @@
   </tbody>
 </table>
 
-{# ── Pilot Ekle ── #}
+{# ── Pilot Ekle — tablodan ayrı ── #}
 <div style="border-top:2px solid #e8e8e8;background:#fff">
   <div id="inline-form-row" style="display:none;background:#F0F6FF;border-bottom:1px solid #d0e4ff">
     <div style="display:flex;align-items:flex-end;gap:12px;padding:14px 16px">
@@ -264,6 +264,7 @@
 </div>
 
 <script>
+// ── Sil ─────────────────────────────────────────────────────
 function silOnay(id, isim) {
   document.getElementById('sil-isim').textContent = isim;
   document.getElementById('sil-form').action = '/pilots/' + id + '/sil';
@@ -272,6 +273,7 @@ function silOnay(id, isim) {
 function silIptal() { document.getElementById('sil-modal').style.display = 'none'; }
 document.getElementById('sil-modal').addEventListener('click', function(e){ if(e.target===this) silIptal(); });
 
+// ── Değiştir ─────────────────────────────────────────────────
 function degistirAc(id) {
   document.querySelectorAll('[id^="edit-row-"]').forEach(function(el){ el.style.display='none'; });
   document.getElementById('edit-row-'+id).style.display='table-row';
@@ -302,6 +304,7 @@ function degistirKaydet(id) {
     .catch(function(){errDiv.textContent='Bağlantı hatası.';errDiv.style.display='block';});
 }
 
+// ── Watch Panel ──────────────────────────────────────────────
 function openWatchPanel() {
   document.getElementById('watch-panel').style.display='block';
   window.scrollTo({top:0,behavior:'smooth'});
@@ -316,6 +319,7 @@ function selectWatch(id) {
   });
 }
 
+// ── Inline Ekle ──────────────────────────────────────────────
 function showInlineForm() {
   document.getElementById('inline-form-row').style.display='block';
   document.getElementById('add-btn-row').style.display='none';

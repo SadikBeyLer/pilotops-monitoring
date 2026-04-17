@@ -1,5 +1,4 @@
 import os
-import json
 import sqlite3
 from flask import Flask, render_template, request, jsonify, redirect, url_for, g
 from datetime import datetime
@@ -11,7 +10,6 @@ from fatigue_engine import (
 
 app = Flask(__name__)
 
-# ── Veritabanı ───────────────────────────────────────────────
 DATABASE = os.environ.get('DATABASE_PATH', 'pilotops.db')
 
 def get_db():
@@ -24,8 +22,7 @@ def get_db():
 @app.teardown_appcontext
 def close_db(e=None):
     db = g.pop('db', None)
-    if db:
-        db.close()
+    if db: db.close()
 
 def init_db():
     db = sqlite3.connect(DATABASE)
@@ -35,140 +32,232 @@ def init_db():
     db.commit()
     db.close()
 
-# ── Şamandıra listesi ────────────────────────────────────────
 SAMANDIRALAR = ['wimba','g.nato','k.nato','sa/sa','petgaz','b.aygaz','k.aygaz','milangaz']
 
-def detect_is_tipi(from_nokta: str, to_nokta: str) -> tuple:
+def detect_is_tipi(from_nokta, to_nokta):
     f = from_nokta.lower().strip()
     t = to_nokta.lower().strip()
-    def is_sam(s):
-        return any(sam in s for sam in SAMANDIRALAR)
-    if is_sam(f):
-        return ('buoy_kalkis', 0.7)
-    if is_sam(t):
-        return ('buoy_yanasma', 1.2)
-    if f in ('pilot position', 'demir'):
-        return ('yanasma', 1.0)
-    if t in ('pilot position', 'demir'):
-        return ('kalkis', 0.7)
+    def is_sam(s): return any(sam in s for sam in SAMANDIRALAR)
+    if is_sam(f): return ('buoy_kalkis', 0.7)
+    if is_sam(t): return ('buoy_yanasma', 1.2)
+    if f in ('pilot position', 'demir'): return ('yanasma', 1.0)
+    if t in ('pilot position', 'demir'): return ('kalkis', 0.7)
     return ('yanasma', 1.0)
 
-def dt_to_abs_hour(dt_str: str, base_date: str = None) -> float:
+def dt_to_abs_hour(dt_str, base_date=None):
     dt = datetime.fromisoformat(dt_str)
     if base_date:
         base = datetime.fromisoformat(base_date)
-        delta = dt - base
-        return delta.total_seconds() / 3600
+        return (dt - base).total_seconds() / 3600
     return dt.hour + dt.minute / 60
-
-# ── Google Drive Servisi ────────────────────────────────────
-def get_drive_service():
-    """Service account JSON'dan Drive servisi oluşturur."""
-    from google.oauth2 import service_account
-    from googleapiclient.discovery import build
-
-    # Önce environment variable'dan oku (Railway için)
-    sa_json = os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
-    if sa_json:
-        sa_info = json.loads(sa_json)
-    else:
-        # Lokalde dosyadan oku
-        with open('service_account.json', 'r') as f:
-            sa_info = json.load(f)
-
-    creds = service_account.Credentials.from_service_account_info(
-        sa_info,
-        scopes=['https://www.googleapis.com/auth/drive.readonly']
-    )
-    return build('drive', 'v3', credentials=creds)
-
-# Klasör ID'leri — Drive'dan bir kez alınır, sonra cache'lenir
-_folder_cache = {}
-
-def get_folder_id(service, folder_name):
-    """Drive'da klasör adına göre ID döndürür."""
-    if folder_name in _folder_cache:
-        return _folder_cache[folder_name]
-
-    results = service.files().list(
-        q=f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and trashed=false",
-        fields="files(id, name)",
-        pageSize=5
-    ).execute()
-    files = results.get('files', [])
-    if files:
-        _folder_cache[folder_name] = files[0]['id']
-        return files[0]['id']
-    return None
 
 # ════════════════════════════════════════════════════════════
 # ROUTES
 # ════════════════════════════════════════════════════════════
 
-# ── Ana Sayfa ────────────────────────────────────────────────
 @app.route('/')
 def index():
     db = get_db()
     watch = db.execute(
         "SELECT * FROM watches WHERE aktif=1 ORDER BY baslangic DESC LIMIT 1"
     ).fetchone()
+    all_watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
 
-    # v_pilot_current view'ından pilotları çek
-    pilots_raw = db.execute("SELECT * FROM v_pilot_current").fetchall()
+    # Sadece aktif watch + izinde olmayan pilotlar
+    if watch:
+        pilots_raw = db.execute("""
+            SELECT p.id AS pilot_id, p.ad_soyad, p.telefon, p.watch_id,
+                   w.watch_no,
+                   COALESCE(
+                     (SELECT fatigue_toplam FROM operations
+                      WHERE pilot_id=p.id ORDER BY olusturma DESC LIMIT 1),0
+                   ) AS son_fatigue_ham,
+                   COALESCE(
+                     (SELECT fatigue_norm FROM operations
+                      WHERE pilot_id=p.id ORDER BY olusturma DESC LIMIT 1),0
+                   ) AS son_fatigue_norm,
+                   COALESCE(
+                     (SELECT fatigue_durum FROM operations
+                      WHERE pilot_id=p.id ORDER BY olusturma DESC LIMIT 1),'FIT'
+                   ) AS fatigue_durum,
+                   COALESCE(
+                     (SELECT COUNT(*) FROM operations
+                      WHERE pilot_id=p.id AND watch_id=?),0
+                   ) AS is_sayisi,
+                   COALESCE(
+                     (SELECT ROUND(SUM((strftime('%s',on_station)-strftime('%s',off_station))/3600.0),2)
+                      FROM operations WHERE pilot_id=p.id AND watch_id=?),0
+                   ) AS calisma_saati,
+                   -- Aktif gemi + detaylar (son 2 saat içinde biten iş)
+                   (SELECT v.gemi_adi FROM operations op2
+                    JOIN vessels v ON v.id=op2.vessel_id
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_gemi,
+                   (SELECT v.loa FROM operations op2
+                    JOIN vessels v ON v.id=op2.vessel_id
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_loa,
+                   (SELECT v.grt FROM operations op2
+                    JOIN vessels v ON v.id=op2.vessel_id
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_grt,
+                   (SELECT op2.from_nokta FROM operations op2
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_from,
+                   (SELECT op2.to_nokta FROM operations op2
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_to,
+                   -- MLC kontrol için toplam calisma ve min dinlenme
+                   COALESCE(
+                     (SELECT ROUND(SUM((strftime('%s',on_station)-strftime('%s',off_station))/3600.0),2)
+                      FROM operations WHERE pilot_id=p.id
+                      AND off_station >= datetime('now','-24 hours')),0
+                   ) AS calisma_24h
+            FROM pilots p
+            LEFT JOIN watches w ON w.id=p.watch_id
+            WHERE p.aktif=1
+              AND p.watch_id=?
+              AND NOT EXISTS (
+                SELECT 1 FROM pilot_izin pi
+                WHERE pi.pilot_id=p.id AND pi.aktif=1
+              )
+            ORDER BY son_fatigue_norm DESC
+        """, (watch['id'], watch['id'], watch['id'])).fetchall()
+    else:
+        pilots_raw = []
 
-    # Her pilot için aktif gemi detaylarını ekle
-    pilots = []
-    for p in pilots_raw:
-        p_dict = dict(p)
-        # En son operasyondan gemi bilgilerini al
-        last_op = db.execute("""
-            SELECT o.from_nokta, o.to_nokta, v.loa, v.grt, v.thruster_bas
-            FROM operations o
-            JOIN vessels v ON v.id = o.vessel_id
-            WHERE o.pilot_id = ?
-            ORDER BY o.olusturma DESC LIMIT 1
-        """, (p['pilot_id'],)).fetchone()
-
-        if last_op:
-            p_dict['aktif_loa']  = last_op['loa']
-            p_dict['aktif_grt']  = last_op['grt']
-            p_dict['aktif_from'] = last_op['from_nokta']
-            p_dict['aktif_to']   = last_op['to_nokta']
-            p_dict['aktif_bt']   = bool(last_op['thruster_bas'])
-        else:
-            p_dict['aktif_loa']  = None
-            p_dict['aktif_grt']  = None
-            p_dict['aktif_from'] = None
-            p_dict['aktif_to']   = None
-            p_dict['aktif_bt']   = False
-
-        pilots.append(p_dict)
-
-    return render_template('index.html', watch=watch, pilots=pilots)
+    return render_template('index.html',
+                           watch=watch,
+                           pilots=pilots_raw,
+                           all_watches=all_watches)
 
 # ── Kaptanlar ────────────────────────────────────────────────
 @app.route('/pilots')
 def pilots():
     db = get_db()
-    pilots = db.execute(
-        "SELECT * FROM pilots WHERE aktif=1 ORDER BY watch_id, ad_soyad"
-    ).fetchall()
     watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
-    return render_template('pilots.html', pilots=pilots, watches=watches)
+    aktif_watch = db.execute("SELECT * FROM watches WHERE aktif=1 LIMIT 1").fetchone()
+    pilots_raw = db.execute("""
+        SELECT p.*,
+               w.watch_no,
+               COALESCE(
+                   (SELECT 1 FROM pilot_izin pi
+                    WHERE pi.pilot_id=p.id AND pi.aktif=1 LIMIT 1),0
+               ) AS izinde
+        FROM pilots p
+        LEFT JOIN watches w ON w.id=p.watch_id
+        WHERE p.aktif=1
+        ORDER BY COALESCE(p.watch_id,9999), p.ad_soyad
+    """).fetchall()
+    return render_template('pilots.html',
+                           pilots=pilots_raw,
+                           watches=watches,
+                           aktif_watch=aktif_watch,
+                           watch=aktif_watch,
+                           all_watches=watches)
 
+# ── Inline Pilot Ekle ────────────────────────────────────────
+@app.route('/pilots/add-inline', methods=['POST'])
+def pilot_add_inline():
+    db = get_db()
+    ad_soyad = request.form.get('ad_soyad','').strip()
+    telefon  = request.form.get('telefon','').strip()
+    watch_id = request.form.get('watch_id',None)
+    if not ad_soyad:
+        return jsonify({'ok':False,'hata':'Ad soyad boş olamaz'})
+    watch_id = int(watch_id) if watch_id else None
+    db.execute(
+        "INSERT INTO pilots (port_id,ad_soyad,telefon,watch_id) VALUES (?,?,?,?)",
+        (1,ad_soyad,telefon,watch_id)
+    )
+    db.commit()
+    return jsonify({'ok':True})
+
+# ── Pilot Güncelle ───────────────────────────────────────────
+@app.route('/pilots/<int:pilot_id>/guncelle', methods=['POST'])
+def pilot_guncelle(pilot_id):
+    db = get_db()
+    ad_soyad = request.form.get('ad_soyad','').strip()
+    telefon  = request.form.get('telefon','').strip()
+    watch_id = request.form.get('watch_id',None)
+    if not ad_soyad:
+        return jsonify({'ok':False,'hata':'Ad soyad boş olamaz'})
+    watch_id = int(watch_id) if watch_id else None
+    db.execute(
+        "UPDATE pilots SET ad_soyad=?,telefon=?,watch_id=? WHERE id=?",
+        (ad_soyad,telefon,watch_id,pilot_id)
+    )
+    db.commit()
+    return jsonify({'ok':True})
+
+# ── Pilot Sil ────────────────────────────────────────────────
+@app.route('/pilots/<int:pilot_id>/sil', methods=['POST'])
+def pilot_sil(pilot_id):
+    db = get_db()
+    db.execute("UPDATE pilots SET aktif=0 WHERE id=?", (pilot_id,))
+    db.commit()
+    return redirect(url_for('pilots'))
+
+# ── İzin Toggle ──────────────────────────────────────────────
+@app.route('/pilots/<int:pilot_id>/izin-toggle', methods=['POST'])
+def pilot_izin_toggle(pilot_id):
+    db = get_db()
+    watch = db.execute("SELECT id FROM watches WHERE aktif=1 LIMIT 1").fetchone()
+    watch_id = watch['id'] if watch else 1
+    mevcut = db.execute(
+        "SELECT id FROM pilot_izin WHERE pilot_id=? AND aktif=1 LIMIT 1",(pilot_id,)
+    ).fetchone()
+    if mevcut:
+        db.execute(
+            "UPDATE pilot_izin SET aktif=0,bitis=? WHERE id=?",
+            (datetime.now().isoformat(timespec='minutes'),mevcut['id'])
+        )
+    else:
+        db.execute(
+            "INSERT INTO pilot_izin (pilot_id,watch_id,baslangic,aktif) VALUES (?,?,?,1)",
+            (pilot_id,watch_id,datetime.now().isoformat(timespec='minutes'))
+        )
+    db.commit()
+    return redirect(url_for('pilots'))
+
+# ── Watch Geçişi ─────────────────────────────────────────────
+@app.route('/watches/set-active', methods=['POST'])
+def watch_set_active():
+    db = get_db()
+    watch_id  = int(request.form['watch_id'])
+    baslangic = request.form.get('baslangic','')
+    bitis     = request.form.get('bitis','')
+    db.execute("UPDATE watches SET aktif=0")
+    if baslangic and bitis:
+        db.execute(
+            "UPDATE watches SET aktif=1,baslangic=?,bitis=? WHERE id=?",
+            (baslangic,bitis,watch_id)
+        )
+    else:
+        db.execute("UPDATE watches SET aktif=1 WHERE id=?",(watch_id,))
+    db.commit()
+    return redirect(url_for('index'))
+
+# ── Eski pilot_add (geriye uyumluluk) ────────────────────────
 @app.route('/pilots/add', methods=['GET','POST'])
 def pilot_add():
     db = get_db()
     if request.method == 'POST':
+        ad_soyad = request.form['ad_soyad']
+        telefon  = request.form.get('telefon','')
+        watch_id = request.form.get('watch_id',None)
+        watch_id = int(watch_id) if watch_id else None
         db.execute(
-            "INSERT INTO pilots (port_id, ad_soyad, telefon) VALUES (?,?,?)",
-            (1, request.form['ad_soyad'], request.form.get('telefon',''))
+            "INSERT INTO pilots (port_id,ad_soyad,telefon,watch_id) VALUES (?,?,?,?)",
+            (1,ad_soyad,telefon,watch_id)
         )
-        watch_id = int(request.form.get('watch_id', 2))
-        db.execute("UPDATE watches SET aktif=0")
-        db.execute("UPDATE watches SET aktif=1 WHERE id=?", (watch_id,))
         db.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for('pilots'))
     watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
     return render_template('pilot_add.html', watches=watches)
 
@@ -176,9 +265,7 @@ def pilot_add():
 @app.route('/vessels')
 def vessels():
     db = get_db()
-    vessels = db.execute(
-        "SELECT * FROM vessels ORDER BY gelis_zamani DESC"
-    ).fetchall()
+    vessels = db.execute("SELECT * FROM vessels ORDER BY gelis_zamani DESC").fetchall()
     return render_template('vessels.html', vessels=vessels)
 
 @app.route('/vessels/add', methods=['GET','POST'])
@@ -187,9 +274,9 @@ def vessel_add():
         db = get_db()
         db.execute("""
             INSERT INTO vessels
-            (imo_no, gemi_adi, tip, bayrak, grt, loa,
-             thruster_bas, thruster_kic, tehlikeli_yuk, not_alani,
-             from_liman, to_liman, gelis_zamani, durum)
+            (imo_no,gemi_adi,tip,bayrak,grt,loa,
+             thruster_bas,thruster_kic,tehlikeli_yuk,not_alani,
+             from_liman,to_liman,gelis_zamani,durum)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             request.form.get('imo_no',''),
@@ -226,81 +313,69 @@ def operation_add():
         on_st      = request.form['on_station']
         draft_bas  = float(request.form.get('draft_bas',0) or 0)
         draft_kic  = float(request.form.get('draft_kic',0) or 0)
-
         is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
-
         watch = db.execute(
             "SELECT id FROM watches WHERE aktif=1 ORDER BY baslangic DESC LIMIT 1"
         ).fetchone()
         watch_id = watch['id'] if watch else 1
-
-        base = off_st[:10] + 'T00:00:00'
-        off_h  = dt_to_abs_hour(off_st, base)
-        pob_h  = dt_to_abs_hour(pob,    base)
-        poff_h = dt_to_abs_hour(poff,   base)
-        on_h   = dt_to_abs_hour(on_st,  base)
+        base   = off_st[:10]+'T00:00:00'
+        off_h  = dt_to_abs_hour(off_st,base)
+        pob_h  = dt_to_abs_hour(pob,base)
+        poff_h = dt_to_abs_hour(poff,base)
+        on_h   = dt_to_abs_hour(on_st,base)
         if pob_h  < off_h:  pob_h  += 24
         if poff_h < pob_h:  poff_h += 24
         if on_h   < poff_h: on_h   += 24
-
-        vessel = db.execute("SELECT grt FROM vessels WHERE id=?", (vessel_id,)).fetchone()
+        vessel = db.execute("SELECT grt FROM vessels WHERE id=?",(vessel_id,)).fetchone()
         grt = vessel['grt'] if vessel else 8000
-
-        katki = job_contrib(off_h, pob_h, poff_h, on_h, is_tipi, grt)
-
+        katki = job_contrib(off_h,pob_h,poff_h,on_h,is_tipi,grt)
         prev = db.execute(
-            "SELECT fatigue_toplam, on_station FROM operations WHERE pilot_id=? ORDER BY olusturma DESC LIMIT 1",
+            "SELECT fatigue_toplam,on_station FROM operations WHERE pilot_id=? ORDER BY olusturma DESC LIMIT 1",
             (pilot_id,)
         ).fetchone()
-
         if prev:
-            rest_h = (datetime.fromisoformat(off_st) - datetime.fromisoformat(prev['on_station'])).total_seconds() / 3600
+            rest_h = (datetime.fromisoformat(off_st)-datetime.fromisoformat(prev['on_station'])).total_seconds()/3600
             if rest_h < 0: rest_h = 0
-            prev_score = apply_recovery(prev['fatigue_toplam'], rest_h)
+            prev_score = apply_recovery(prev['fatigue_toplam'],rest_h)
         else:
             prev_score = 0.0
-
         toplam = prev_score + katki
         norm   = normalize_score(toplam)
         color, durum = fatigue_color(toplam)
-        score_fmt = format_score(toplam)
-
-        zorunlu = 1 if norm >= 90 else 0
-        onaylayan = request.form.get('onaylayan', '') if norm >= 75 else ''
-
+        zorunlu  = 1 if norm >= 90 else 0
+        onaylayan = request.form.get('onaylayan','') if norm >= 75 else ''
         db.execute("""
             INSERT INTO operations
-            (pilot_id, vessel_id, watch_id, from_nokta, to_nokta,
-             is_tipi, k_carpan, off_station, pob, poff, on_station,
-             draft_bas, draft_kic, fatigue_katki, fatigue_toplam,
-             fatigue_norm, fatigue_durum, zorunlu_atama, onaylayan)
+            (pilot_id,vessel_id,watch_id,from_nokta,to_nokta,
+             is_tipi,k_carpan,off_station,pob,poff,on_station,
+             draft_bas,draft_kic,fatigue_katki,fatigue_toplam,
+             fatigue_norm,fatigue_durum,zorunlu_atama,onaylayan)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
-            pilot_id, vessel_id, watch_id, from_nokta, to_nokta,
-            is_tipi, k, off_st, pob, poff, on_st,
-            draft_bas, draft_kic, katki, toplam,
-            norm, durum, zorunlu, onaylayan
+            pilot_id,vessel_id,watch_id,from_nokta,to_nokta,
+            is_tipi,k,off_st,pob,poff,on_st,
+            draft_bas,draft_kic,katki,toplam,
+            norm,durum,zorunlu,onaylayan
         ))
         db.commit()
         return redirect(url_for('index'))
-
     pilots  = db.execute("SELECT * FROM pilots WHERE aktif=1 ORDER BY ad_soyad").fetchall()
     vessels = db.execute("SELECT * FROM vessels ORDER BY gemi_adi").fetchall()
-    return render_template('operation_add.html', pilots=pilots, vessels=vessels,
+    return render_template('operation_add.html',pilots=pilots,vessels=vessels,
                            samandiralar=SAMANDIRALAR)
 
-# ── API: Kaptan fatigue skoru ────────────────────────────────
+# ── API: Kaptan fatigue ───────────────────────────────────────
 @app.route('/api/pilot/<int:pilot_id>/fatigue')
 def api_pilot_fatigue(pilot_id):
     db = get_db()
     row = db.execute(
-        "SELECT fatigue_toplam, fatigue_norm, fatigue_durum, on_station FROM operations WHERE pilot_id=? ORDER BY olusturma DESC LIMIT 1",
+        "SELECT fatigue_toplam,fatigue_norm,fatigue_durum,on_station FROM operations WHERE pilot_id=? ORDER BY olusturma DESC LIMIT 1",
         (pilot_id,)
     ).fetchone()
     if not row:
-        return jsonify({'ham': 0, 'norm': 0, 'durum': 'FIT', 'score_fmt': '0'})
+        return jsonify({'ham':0,'norm':0,'durum':'FIT','score_fmt':'0'})
     return jsonify({
-        'ham':       round(row['fatigue_toplam'], 3),
+        'ham':       round(row['fatigue_toplam'],3),
         'norm':      row['fatigue_norm'],
         'durum':     row['fatigue_durum'],
         'score_fmt': format_score(row['fatigue_toplam'])
@@ -311,107 +386,36 @@ def api_pilot_fatigue(pilot_id):
 def api_detect_tip():
     from_n = request.args.get('from','')
     to_n   = request.args.get('to','')
-    tip, k = detect_is_tipi(from_n, to_n)
+    tip, k = detect_is_tipi(from_n,to_n)
     labels = {
-        'yanasma':      ('Yanaşma',            '#27500A', '#EAF3DE'),
-        'kalkis':       ('Kalkış',              '#0C447C', '#E6F1FB'),
-        'buoy_yanasma': ('Şamandıra yanaşma',   '#633806', '#FAEEDA'),
-        'buoy_kalkis':  ('Şamandıra kalkış',    '#3C3489', '#EEEDFE'),
+        'yanasma':      ('Yanaşma',           '#27500A','#EAF3DE'),
+        'kalkis':       ('Kalkış',             '#0C447C','#E6F1FB'),
+        'buoy_yanasma': ('Şamandıra yanaşma',  '#633806','#FAEEDA'),
+        'buoy_kalkis':  ('Şamandıra kalkış',   '#3C3489','#EEEDFE'),
     }
-    label, color, bg = labels.get(tip, ('Belirsiz', '#888', '#eee'))
-    return jsonify({'tip': tip, 'k': k, 'label': label, 'color': color, 'bg': bg})
+    label,color,bg = labels.get(tip,('Belirsiz','#888','#eee'))
+    return jsonify({'tip':tip,'k':k,'label':label,'color':color,'bg':bg})
 
-# ── API: Google Drive — Talimat / Ordino ─────────────────────
-@app.route('/api/drive/<gemi_adi>/<tip>')
-def api_drive(gemi_adi, tip):
-    """
-    tip: 'talimat' → '01-BEKLEYEN TALİMATLAR' klasöründe ara
-         'ordino'  → '05-YANAŞMA ORD.' klasöründe ara
-    Gemi adını içeren ilk PDF'in Drive linkini döndürür.
-    """
-    KLASORLER = {
-        'talimat': '01-BEKLEYEN TALİMATLAR',
-        'ordino':  '05-YANAŞMA ORD.',
-    }
-
-    if tip not in KLASORLER:
-        return jsonify({'error': 'Geçersiz tip'}), 400
-
-    klasor_adi = KLASORLER[tip]
-
-    try:
-        service = get_drive_service()
-
-        # Klasör ID'sini bul
-        folder_id = get_folder_id(service, klasor_adi)
-        if not folder_id:
-            return jsonify({'error': f'"{klasor_adi}" klasörü bulunamadı'})
-
-        # Klasör içinde gemi adını içeren PDF'i ara
-        # Büyük/küçük harf farkını azaltmak için hem orijinal hem uppercase dene
-        query = (
-            f"'{folder_id}' in parents "
-            f"and name contains '{gemi_adi}' "
-            f"and mimeType='application/pdf' "
-            f"and trashed=false"
-        )
-        results = service.files().list(
-            q=query,
-            fields="files(id, name, webViewLink)",
-            pageSize=5,
-            orderBy="modifiedTime desc"
-        ).execute()
-        files = results.get('files', [])
-
-        if not files:
-            # Büyük harfle tekrar dene
-            query2 = (
-                f"'{folder_id}' in parents "
-                f"and name contains '{gemi_adi.upper()}' "
-                f"and mimeType='application/pdf' "
-                f"and trashed=false"
-            )
-            results2 = service.files().list(
-                q=query2,
-                fields="files(id, name, webViewLink)",
-                pageSize=5,
-                orderBy="modifiedTime desc"
-            ).execute()
-            files = results2.get('files', [])
-
-        if files:
-            return jsonify({
-                'link': files[0]['webViewLink'],
-                'dosya': files[0]['name']
-            })
-        else:
-            return jsonify({'error': f'{gemi_adi} için {tip} bulunamadı'})
-
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
-# ── Pilot Jobs ───────────────────────────────────────────────
+# ── Pilot Jobs ────────────────────────────────────────────────
 @app.route('/pilots/<int:pilot_id>/jobs')
 def pilot_jobs(pilot_id):
     db = get_db()
-    pilot = db.execute("SELECT * FROM pilots WHERE id=?", (pilot_id,)).fetchone()
-    jobs = db.execute("""
+    pilot = db.execute("SELECT * FROM pilots WHERE id=?",(pilot_id,)).fetchone()
+    jobs  = db.execute("""
         SELECT o.*, v.gemi_adi, v.tip, v.grt
         FROM operations o
-        JOIN vessels v ON v.id = o.vessel_id
-        WHERE o.pilot_id = ?
+        JOIN vessels v ON v.id=o.vessel_id
+        WHERE o.pilot_id=?
         ORDER BY o.off_station DESC
-    """, (pilot_id,)).fetchall()
-    return render_template('pilot_jobs.html', pilot=pilot, jobs=jobs)
+    """,(pilot_id,)).fetchall()
+    return render_template('pilot_jobs.html',pilot=pilot,jobs=jobs)
 
-# ── Uygulama başlangıcı ──────────────────────────────────────
 if __name__ == '__main__':
     if not os.path.exists(DATABASE):
         init_db()
         print(f"Veritabanı oluşturuldu: {DATABASE}")
     app.run(debug=True, port=5001)
 
-# Railway için
 with app.app_context():
     if not os.path.exists(DATABASE):
         init_db()
