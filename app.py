@@ -63,7 +63,6 @@ def index():
     ).fetchone()
     all_watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
 
-    # Sadece aktif watch + izinde olmayan pilotlar
     if watch:
         pilots_raw = db.execute("""
             SELECT p.id AS pilot_id, p.ad_soyad, p.telefon, p.watch_id,
@@ -112,7 +111,14 @@ def index():
                     WHERE op2.pilot_id=p.id
                     AND op2.on_station > datetime('now','-2 hours')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_to,
-                   -- MLC kontrol için toplam calisma ve min dinlenme
+                   -- BT: thruster_bas veya thruster_kic varsa 1
+                   (SELECT (CASE WHEN (v.thruster_bas > 0 OR v.thruster_kic > 0) THEN 1 ELSE 0 END)
+                    FROM operations op2
+                    JOIN vessels v ON v.id=op2.vessel_id
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_thruster,
+                   -- MLC kontrol için toplam calisma
                    COALESCE(
                      (SELECT ROUND(SUM((strftime('%s',on_station)-strftime('%s',off_station))/3600.0),2)
                       FROM operations WHERE pilot_id=p.id
@@ -128,12 +134,30 @@ def index():
               )
             ORDER BY son_fatigue_norm DESC
         """, (watch['id'], watch['id'], watch['id'])).fetchall()
+
+        # Her pilot için iş listesini çek (accordion için)
+        pilot_jobs = {}
+        for p in pilots_raw:
+            jobs = db.execute("""
+                SELECT o.id, o.from_nokta, o.to_nokta, o.is_tipi,
+                       o.off_station, o.pob, o.poff, o.on_station,
+                       o.fatigue_norm,
+                       v.gemi_adi, v.tip, v.grt, v.loa,
+                       v.thruster_bas, v.thruster_kic
+                FROM operations o
+                JOIN vessels v ON v.id=o.vessel_id
+                WHERE o.pilot_id=?
+                ORDER BY o.off_station DESC
+            """, (p['pilot_id'],)).fetchall()
+            pilot_jobs[p['pilot_id']] = jobs
     else:
         pilots_raw = []
+        pilot_jobs = {}
 
     return render_template('index.html',
                            watch=watch,
                            pilots=pilots_raw,
+                           pilot_jobs=pilot_jobs,
                            all_watches=all_watches)
 
 # ── Kaptanlar ────────────────────────────────────────────────
@@ -396,7 +420,7 @@ def api_detect_tip():
     label,color,bg = labels.get(tip,('Belirsiz','#888','#eee'))
     return jsonify({'tip':tip,'k':k,'label':label,'color':color,'bg':bg})
 
-# ── Pilot Jobs ────────────────────────────────────────────────
+# ── Pilot Jobs (ayrı sayfa — geriye uyumluluk) ───────────────
 @app.route('/pilots/<int:pilot_id>/jobs')
 def pilot_jobs(pilot_id):
     db = get_db()

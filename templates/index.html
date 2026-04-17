@@ -35,6 +35,7 @@
   {% set wh    = p.calisma_saati or 0 %}
   {% set r12   = 12 - wh %}
   {% set wh24  = p.calisma_24h or 0 %}
+  {% set jobs  = pilot_jobs.get(p.pilot_id, []) %}
 
   {# Fatigue renk/badge #}
   {% if norm > 100 %}
@@ -51,37 +52,31 @@
     {% set row_bg='#fff' %}{% set badge_cls='badge-green' %}{% set bar_color='#1a7a2e' %}
   {% endif %}
 
-  {# MLC 2006 kontrolü: günlük max 14 saat #}
   {% set mlc_ok = wh24 <= 14 %}
 
-  <tr style="background:{{ row_bg }};border-bottom:1px solid #f0f0f0;cursor:pointer"
-      onclick="window.location='/pilots/{{ p.pilot_id }}/jobs'">
+  {# Ana pilot satırı #}
+  <tr style="background:{{ row_bg }};border-bottom:{% if jobs %}none{% else %}1px solid #f0f0f0{% endif %};cursor:pointer"
+      onclick="toggleJobs({{ p.pilot_id }}, this)">
 
-    {# # #}
     <td style="padding:11px 14px;color:#bbb;font-size:14px">{{ loop.index }}</td>
 
-    {# Pilot adı #}
+    {# Pilot adı + accordion oku #}
     <td style="padding:11px 14px">
-      <div style="font-weight:700;font-size:15px;color:#1a1a1a">{{ p.ad_soyad }}</div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="font-weight:700;font-size:15px;color:#1a1a1a">{{ p.ad_soyad }}</span>
+        {% if jobs %}
+        <span id="arrow-{{ p.pilot_id }}" style="font-size:11px;color:#aaa;transition:transform .2s;display:inline-block">▼</span>
+        {% endif %}
+      </div>
     </td>
 
-    {# Jobs #}
-    <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:700">
-      {{ p.is_sayisi or 0 }}
-    </td>
-
-    {# Working Hours #}
-    <td style="padding:11px 14px;text-align:center;font-size:15px">
-      {{ '%.2f'|format(wh) }}
-    </td>
-
-    {# R/12 #}
+    <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
+    <td style="padding:11px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
     <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:600;
                color:{% if r12 < 2 %}#c0152a{% elif r12 < 4 %}#b85c00{% else %}#555{% endif %}">
       {{ '%.2f'|format(r12) }}
     </td>
 
-    {# Fatigue skoru + bar #}
     <td style="padding:11px 14px;text-align:center;min-width:100px">
       <div style="font-size:20px;font-weight:800;color:{{ bar_color }}">
         {{ norm }}{% if norm > 100 %}+{% endif %}
@@ -91,57 +86,98 @@
       </div>
     </td>
 
-    {# MLC 2006 tik/çarpı #}
     <td style="padding:11px 14px;text-align:center">
       {% if mlc_ok %}
-      <span style="font-size:18px;color:#1a7a2e" title="MLC 2006 Uygun — 24s çalışma: {{ '%.1f'|format(wh24) }}s">✓</span>
+      <span style="font-size:18px;color:#1a7a2e" title="MLC 2006 Uygun — 24s: {{ '%.1f'|format(wh24) }}s">✓</span>
       {% else %}
-      <span style="font-size:18px;color:#c0152a" title="MLC 2006 İhlal — 24s çalışma: {{ '%.1f'|format(wh24) }}s (max 14s)">✗</span>
+      <span style="font-size:18px;color:#c0152a" title="MLC 2006 İhlal — 24s: {{ '%.1f'|format(wh24) }}s (max 14s)">✗</span>
       {% endif %}
     </td>
 
-    {# Active Vessel — YENİ FORMAT #}
+    {# Active Vessel #}
     <td style="padding:11px 14px;min-width:220px">
       {% if p.aktif_gemi %}
-
-      {# Satır 1: GEMİ ADI (büyük/mavi) + silik Loa ve Gt #}
       <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
         <span style="font-size:15px;font-weight:700;color:#185FA5;text-transform:uppercase">{{ p.aktif_gemi }}</span>
-        {% if p.aktif_loa %}
-        <span style="font-size:11px;color:#bbb">Loa: {{ p.aktif_loa|int }}m</span>
-        {% endif %}
-        {% if p.aktif_grt %}
-        <span style="font-size:11px;color:#bbb">Gt: {{ p.aktif_grt|int }}</span>
-        {% endif %}
+        {% if p.aktif_loa %}<span style="font-size:11px;color:#bbb">Loa: {{ p.aktif_loa|int }}m</span>{% endif %}
+        {% if p.aktif_grt %}<span style="font-size:11px;color:#bbb">Gt: {{ p.aktif_grt|int }}</span>{% endif %}
       </div>
-
-      {# Satır 2: Fr, To, BT #}
-      <div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        {% if p.aktif_from %}
-        <span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ p.aktif_from }}</span></span>
-        {% endif %}
-        {% if p.aktif_to %}
-        <span style="font-size:11px;color:#999">To: <span style="color:#666">{{ p.aktif_to }}</span></span>
-        {% endif %}
-        {# BT (Bow Thruster) — thruster alanından #}
+      <div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:8px">
+        {% if p.aktif_from %}<span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ p.aktif_from }}</span></span>{% endif %}
+        {% if p.aktif_to %}<span style="font-size:11px;color:#999">To: <span style="color:#666">{{ p.aktif_to }}</span></span>{% endif %}
         {% if p.aktif_thruster %}
           <span style="font-size:11px;color:#999">BT: <span style="color:#1a7a2e;font-weight:700">Yes</span></span>
         {% else %}
           <span style="font-size:11px;color:#999">BT: <span style="color:#aaa">No</span></span>
         {% endif %}
       </div>
-
       {% else %}
       <span style="color:#ccc">—</span>
       {% endif %}
     </td>
 
-    {# Status badge #}
     <td style="padding:11px 14px;text-align:center">
       <span class="badge {{ badge_cls }}">{{ durum }}</span>
     </td>
 
   </tr>
+
+  {# Accordion — iş listesi (başlangıçta gizli) #}
+  {% if jobs %}
+  <tr id="jobs-{{ p.pilot_id }}" style="display:none;background:#F8FAFD">
+    <td colspan="9" style="padding:0">
+      <div style="padding:10px 20px 14px 48px">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="color:#999;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e8edf5">
+              <th style="padding:5px 10px;text-align:left">#</th>
+              <th style="padding:5px 10px;text-align:left">Gemi</th>
+              <th style="padding:5px 10px;text-align:left">Loa / Gt</th>
+              <th style="padding:5px 10px;text-align:left">Fr → To</th>
+              <th style="padding:5px 10px;text-align:center">Off St.</th>
+              <th style="padding:5px 10px;text-align:center">POB</th>
+              <th style="padding:5px 10px;text-align:center">P.Off</th>
+              <th style="padding:5px 10px;text-align:center">On St.</th>
+              <th style="padding:5px 10px;text-align:center">BT</th>
+              <th style="padding:5px 10px;text-align:center">Fatigue</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for j in jobs %}
+          <tr style="border-top:1px solid #edf0f5">
+            <td style="padding:7px 10px;color:#bbb">{{ loop.index }}</td>
+            <td style="padding:7px 10px;font-weight:700;color:#1a1a1a;text-transform:uppercase">{{ j.gemi_adi }}</td>
+            <td style="padding:7px 10px;color:#888">
+              {% if j.loa %}{{ j.loa|int }}m{% endif %}
+              {% if j.loa and j.grt %} / {% endif %}
+              {% if j.grt %}{{ j.grt|int }}{% endif %}
+            </td>
+            <td style="padding:7px 10px;color:#555">{{ j.from_nokta }} → {{ j.to_nokta }}</td>
+            <td style="padding:7px 10px;text-align:center;color:#555">{{ j.off_station[11:16] if j.off_station else '—' }}</td>
+            <td style="padding:7px 10px;text-align:center;color:#185FA5;font-weight:600">{{ j.pob[11:16] if j.pob else '—' }}</td>
+            <td style="padding:7px 10px;text-align:center;color:#185FA5;font-weight:600">{{ j.poff[11:16] if j.poff else '—' }}</td>
+            <td style="padding:7px 10px;text-align:center;color:#555">{{ j.on_station[11:16] if j.on_station else '—' }}</td>
+            <td style="padding:7px 10px;text-align:center">
+              {% if j.thruster_bas > 0 or j.thruster_kic > 0 %}
+                <span style="color:#1a7a2e;font-weight:700">Yes</span>
+              {% else %}
+                <span style="color:#ccc">No</span>
+              {% endif %}
+            </td>
+            <td style="padding:7px 10px;text-align:center;font-weight:700;color:#185FA5">{{ j.fatigue_norm }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </td>
+  </tr>
+  {# Ayırıcı çizgi #}
+  <tr style="background:{{ row_bg }}">
+    <td colspan="9" style="padding:0;border-bottom:1px solid #f0f0f0;height:1px"></td>
+  </tr>
+  {% endif %}
+
   {% else %}
   <tr>
     <td colspan="9" style="padding:40px;text-align:center;color:#aaa;font-size:15px">
@@ -158,4 +194,20 @@
   </tbody>
 </table>
 </div>
+
+<script>
+function toggleJobs(pilotId, row) {
+  var jobsRow = document.getElementById('jobs-' + pilotId);
+  var arrow   = document.getElementById('arrow-' + pilotId);
+  if (!jobsRow) return;
+  if (jobsRow.style.display === 'none') {
+    jobsRow.style.display = 'table-row';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+  } else {
+    jobsRow.style.display = 'none';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+  }
+}
+</script>
+
 {% endblock %}
