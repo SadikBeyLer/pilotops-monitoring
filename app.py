@@ -71,8 +71,9 @@ def index():
     watch = db.execute(
         "SELECT * FROM watches WHERE aktif=1 ORDER BY baslangic DESC LIMIT 1"
     ).fetchone()
+    all_watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
     pilots = db.execute("SELECT * FROM v_pilot_current").fetchall()
-    return render_template('index.html', watch=watch, pilots=pilots)
+    return render_template('index.html', watch=watch, pilots=pilots, all_watches=all_watches)
 
 # ── Kaptanlar ────────────────────────────────────────────────
 @app.route('/pilots')
@@ -80,9 +81,6 @@ def pilots():
     db = get_db()
     watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
     aktif_watch = db.execute("SELECT * FROM watches WHERE aktif=1 LIMIT 1").fetchone()
-
-    # Tüm pilotları watch_id → harf sırasıyla çek
-    # watch_id NULL olanlar en sona
     pilots_raw = db.execute("""
         SELECT p.*,
                w.watch_no,
@@ -95,11 +93,12 @@ def pilots():
         WHERE p.aktif = 1
         ORDER BY COALESCE(p.watch_id, 9999), p.ad_soyad
     """).fetchall()
-
     return render_template('pilots.html',
                            pilots=pilots_raw,
                            watches=watches,
-                           aktif_watch=aktif_watch)
+                           aktif_watch=aktif_watch,
+                           watch=aktif_watch,
+                           all_watches=watches)
 
 # ── Inline Pilot Ekle (AJAX POST) ───────────────────────────
 @app.route('/pilots/add-inline', methods=['POST'])

@@ -7,25 +7,38 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F5F5;color:#1a1a1a;font-size:16px}
-.navbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 24px;display:flex;align-items:center;gap:0;height:60px}
+.navbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 24px;display:flex;align-items:center;gap:0;height:60px;position:relative;z-index:200}
 .nav-brand{font-weight:700;font-size:20px;color:#1a1a1a;margin-right:32px;text-decoration:none}
 .nav-brand span{color:#185FA5}
 .nav-link{padding:0 16px;height:60px;display:flex;align-items:center;font-size:15px;color:#666;text-decoration:none;border-bottom:3px solid transparent}
 .nav-link:hover{color:#1a1a1a}
 .nav-link.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:600}
-.nav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:12px;position:relative}
 
-/* Watch butonu — tıklanabilir badge */
-.watch-btn{
-  background:#E6F1FB;color:#0C447C;
-  border:1px solid #B5D4F4;border-radius:20px;
-  padding:5px 16px;font-size:14px;font-weight:600;
-  cursor:pointer;text-decoration:none;
-  transition:background .15s;
-  display:flex;align-items:center;gap:6px;
-}
+/* Watch dropdown butonu */
+.watch-btn{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4;border-radius:20px;
+  padding:5px 16px;font-size:14px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:background .15s;
+  text-decoration:none;border:1px solid #B5D4F4}
 .watch-btn:hover{background:#cfe4f8}
-.watch-btn-arrow{font-size:11px;opacity:.7}
+.watch-arrow{font-size:11px;opacity:.6;transition:transform .2s}
+.watch-arrow.open{transform:rotate(180deg)}
+
+/* Dropdown panel */
+.watch-dropdown{
+  display:none;
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  width:340px;
+  background:#fff;
+  border:1px solid #dde8f5;
+  border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+  padding:16px;
+  z-index:500;
+}
+.watch-dropdown.open{display:block}
 
 .container{max-width:1200px;margin:0 auto;padding:24px}
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
@@ -59,29 +72,143 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <nav class="navbar">
   <a href="/" class="nav-brand">Pilot<span>Ops</span></a>
   <a href="/vessels" class="nav-link {% if request.endpoint=='vessels' or request.endpoint=='vessel_add' %}active{% endif %}">Gemiler</a>
+
   <div class="nav-right">
     <a href="/pilots" class="nav-link {% if request.endpoint=='pilots' or request.endpoint=='pilot_add' %}active{% endif %}">Pilots</a>
 
-    {# Watch butonu — sadece pilots sayfasında aktif, diğerlerinde de göster #}
     {% if watch %}
-    {% if request.endpoint == 'pilots' %}
-    {# Pilots sayfasındayken: tıklayınca panel açılır (JS ile) #}
-    <button type="button" class="watch-btn" onclick="openWatchPanel()">
-      {{ watch.watch_no }}
-      <span class="watch-btn-arrow">▼</span>
+    {# Watch dropdown butonu #}
+    <button class="watch-btn" id="watch-nav-btn" onclick="toggleWatchDropdown()" type="button">
+      <span id="watch-nav-label">{{ watch.watch_no }}</span>
+      <span class="watch-arrow" id="watch-arrow">▼</span>
     </button>
-    {% else %}
-    {# Diğer sayfalarda: pilots sayfasına yönlendirir #}
-    <a href="/pilots" class="watch-btn">
-      {{ watch.watch_no }}
-      <span class="watch-btn-arrow">›</span>
-    </a>
-    {% endif %}
+
+    {# Dropdown paneli #}
+    <div class="watch-dropdown" id="watch-dropdown">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:12px">
+        Watch Seç
+      </div>
+
+      <form method="POST" action="/watches/set-active" id="nav-watch-form">
+
+        {# Watch 1 / 2 / 3 seçim butonları #}
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          {% for w in all_watches %}
+          <label id="nwlbl-{{ w.id }}"
+                 style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+                        padding:10px 8px;border:2px solid {% if w.aktif %}#185FA5{% else %}#d8d8d8{% endif %};
+                        border-radius:10px;cursor:pointer;
+                        background:{% if w.aktif %}#EEF5FF{% else %}#fff{% endif %}">
+            <input type="radio" name="watch_id" value="{{ w.id }}"
+                   {% if w.aktif %}checked{% endif %}
+                   onchange="navSelectWatch({{ w.id }})"
+                   style="display:none">
+            <span style="font-size:14px;font-weight:700;color:{% if w.aktif %}#185FA5{% else %}#555{% endif %}"
+                  id="nwlbl-text-{{ w.id }}">{{ w.watch_no }}</span>
+            <span style="font-size:10px;border-radius:8px;padding:1px 7px;font-weight:600;
+                         background:{% if w.aktif %}#EAF3DE{% else %}#f0f0f0{% endif %};
+                         color:{% if w.aktif %}#27500A{% else %}#888{% endif %}"
+                  id="nwlbl-status-{{ w.id }}">{% if w.aktif %}Aktif{% else %}Pasif{% endif %}</span>
+          </label>
+          {% endfor %}
+        </div>
+
+        {# From / To tarihleri #}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#888;letter-spacing:.05em">From</label>
+            <input type="datetime-local" name="baslangic" id="nav-baslangic"
+                   value="{{ watch.baslangic[:16] }}"
+                   style="border:1px solid #d8d8d8;border-radius:7px;padding:7px 10px;
+                          font-size:13px;color:#aaa;background:#fff;width:100%">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#888;letter-spacing:.05em">To</label>
+            <input type="datetime-local" name="bitis" id="nav-bitis"
+                   value="{{ watch.bitis[:16] }}"
+                   style="border:1px solid #d8d8d8;border-radius:7px;padding:7px 10px;
+                          font-size:13px;color:#aaa;background:#fff;width:100%">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" onclick="closeWatchDropdown()"
+                  style="background:#fff;border:1px solid #d0d0d0;border-radius:8px;
+                         padding:7px 14px;font-size:14px;font-weight:500;cursor:pointer;color:#444">
+            İptal
+          </button>
+          <button type="submit"
+                  style="background:#185FA5;color:#fff;border:none;border-radius:8px;
+                         padding:7px 16px;font-size:14px;font-weight:600;cursor:pointer">
+            Onayla
+          </button>
+        </div>
+      </form>
+    </div>
     {% endif %}
   </div>
 </nav>
+
 <div class="container">
   {% block content %}{% endblock %}
 </div>
+
+<script>
+// ── Watch Dropdown (navbar) ──────────────────────────────────
+function toggleWatchDropdown() {
+  var dd = document.getElementById('watch-dropdown');
+  var arrow = document.getElementById('watch-arrow');
+  var isOpen = dd.classList.contains('open');
+  if (isOpen) {
+    dd.classList.remove('open');
+    arrow.classList.remove('open');
+  } else {
+    dd.classList.add('open');
+    arrow.classList.add('open');
+  }
+}
+function closeWatchDropdown() {
+  var dd = document.getElementById('watch-dropdown');
+  var arrow = document.getElementById('watch-arrow');
+  if (dd) dd.classList.remove('open');
+  if (arrow) arrow.classList.remove('open');
+}
+
+function navSelectWatch(id) {
+  [1,2,3].forEach(function(i){
+    var lbl    = document.getElementById('nwlbl-'+i);
+    var txt    = document.getElementById('nwlbl-text-'+i);
+    var status = document.getElementById('nwlbl-status-'+i);
+    if(!lbl) return;
+    if(i===id){
+      lbl.style.borderColor='#185FA5'; lbl.style.background='#EEF5FF';
+      if(txt) txt.style.color='#185FA5';
+      if(status){status.textContent='Aktif';status.style.background='#EAF3DE';status.style.color='#27500A';}
+    } else {
+      lbl.style.borderColor='#d8d8d8'; lbl.style.background='#fff';
+      if(txt) txt.style.color='#555';
+      if(status){status.textContent='Pasif';status.style.background='#f0f0f0';status.style.color='#888';}
+    }
+  });
+}
+
+// Dışarı tıklayınca kapat
+document.addEventListener('click', function(e){
+  var btn = document.getElementById('watch-nav-btn');
+  var dd  = document.getElementById('watch-dropdown');
+  if(!dd || !btn) return;
+  if(!btn.contains(e.target) && !dd.contains(e.target)){
+    closeWatchDropdown();
+  }
+});
+
+// Tarih alanlarını input odaklandığında gerçek renge getir
+['nav-baslangic','nav-bitis'].forEach(function(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('focus', function(){ this.style.color='#1a1a1a'; });
+  el.addEventListener('blur',  function(){ if(!this.value) this.style.color='#aaa'; });
+});
+</script>
 </body>
 </html>
