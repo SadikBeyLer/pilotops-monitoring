@@ -8,7 +8,7 @@
 </div>
 
 {# ── Segmentler ── #}
-<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
   {% set segments = [
     ('gelecek',     'Gelecek'),
     ('demirde',     'Demirde'),
@@ -22,7 +22,7 @@
   <button onclick="toggleSegment('{{ key }}')" id="btn-{{ key }}"
     style="padding:7px 16px;border-radius:20px;border:1.5px solid #dde8f5;background:#fff;
            font-size:13px;font-weight:600;color:#555;cursor:pointer;transition:all .15s;
-           display:flex;align-items:center;gap:7px">
+           display:inline-flex;align-items:center;gap:7px">
     {{ label }}
     {% if count > 0 %}
     <span style="background:#185FA5;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px">{{ count }}</span>
@@ -33,9 +33,9 @@
 
 {# ── Segment içerikleri ── #}
 {% for key, label in segments %}
-<div id="seg-{{ key }}" style="display:none;margin-bottom:18px">
-  <div class="card" style="padding:0">
-    <div style="padding:12px 16px;background:#F4F7FB;border-bottom:1px solid #dde8f5;
+<div id="seg-{{ key }}" style="display:none;margin-bottom:14px">
+  <div class="card" style="padding:0;overflow:visible">
+    <div style="padding:11px 16px;background:#F4F7FB;border-bottom:1px solid #dde8f5;
                 font-size:13px;font-weight:700;color:#185FA5">
       {{ label }}
     </div>
@@ -45,26 +45,51 @@
       <tbody>
       {% for v in seg_vessels %}
       <tr style="border-bottom:1px solid #f0f0f0">
-        <td style="padding:10px 16px">
-          <div style="font-weight:700;font-size:15px">{{ v.gemi_adi }}</div>
-          <div style="font-size:11px;color:#999;margin-top:2px">
-            {{ v.tip or '' }}{% if v.tip and v.grt %} · {% endif %}
-            {% if v.grt %}{{ '{:,.0f}'.format(v.grt) }} GRT{% endif %}
-            {% if v.loa %} · {{ v.loa|int }}m{% endif %}
-            {% if v.thruster_bas > 0 or v.thruster_kic > 0 %} · BT: Yes{% endif %}
+        <td style="padding:11px 16px">
+          {# Satır 1: Gemi adı #}
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a">{{ v.gemi_adi }}</div>
+          {# Satır 2: Tüm bilgiler yan yana #}
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;align-items:center">
+            {% if v.loa %}
+            <span style="font-size:11px;color:#999">Loa: <strong style="color:#555">{{ v.loa|int }}m</strong></span>
+            {% endif %}
+            {% if v.grt %}
+            <span style="font-size:11px;color:#999">Gt: <strong style="color:#555">{{ '{:,.0f}'.format(v.grt) }}</strong></span>
+            {% endif %}
+            {% if v.tip %}
+            <span style="font-size:11px;color:#999">Tip: <strong style="color:#555">{{ v.tip }}</strong></span>
+            {% endif %}
+            {% if v.from_liman %}
+            <span style="font-size:11px;color:#999">Fr: <strong style="color:#555">{{ v.from_liman }}</strong></span>
+            {% endif %}
+            {% if v.to_liman %}
+            <span style="font-size:11px;color:#999">To: <strong style="color:#555">{{ v.to_liman }}</strong></span>
+            {% endif %}
+            {% if v.thruster_bas > 0 or v.thruster_kic > 0 %}
+            <span style="font-size:11px;color:#999">BT: <strong style="color:#1a7a2e">Yes</strong></span>
+            {% else %}
+            <span style="font-size:11px;color:#ccc">BT: No</span>
+            {% endif %}
+            {% if v.gelis_zamani %}
+            <span style="font-size:11px;color:#999">ETA: <strong style="color:#555">{{ v.gelis_zamani[:16] }}</strong></span>
+            {% endif %}
+            {% if v.not_alani %}
+            <span style="font-size:11px;color:#999">Not: <strong style="color:#555">{{ v.not_alani }}</strong></span>
+            {% endif %}
           </div>
         </td>
-        <td style="padding:10px 16px;text-align:right">
-          {# Durum değiştir dropdown #}
+        <td style="padding:11px 16px;text-align:right;vertical-align:middle;white-space:nowrap">
+          {# Taşı dropdown — z-index yüksek #}
           <div style="position:relative;display:inline-block">
-            <button onclick="toggleDurumMenu({{ v.id }}, event)"
-              style="padding:5px 12px;border-radius:6px;border:1px solid #dde8f5;
-                     background:#fff;font-size:12px;font-weight:600;color:#185FA5;cursor:pointer">
+            <button onclick="toggleDurumMenu('{{ key }}_{{ v.id }}', event)"
+              style="padding:6px 14px;border-radius:6px;border:1.5px solid #185FA5;
+                     background:#fff;font-size:12px;font-weight:700;color:#185FA5;cursor:pointer">
               Taşı ▾
             </button>
-            <div id="menu-{{ v.id }}" style="display:none;position:absolute;right:0;top:100%;
-                 background:#fff;border:1px solid #e0e0e0;border-radius:8px;
-                 box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:100;min-width:160px;padding:4px 0">
+            <div id="menu-{{ key }}_{{ v.id }}"
+                 style="display:none;position:fixed;background:#fff;border:1px solid #e0e0e0;
+                        border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);
+                        z-index:9999;min-width:170px;padding:4px 0">
               {% set all_durums = [
                 ('gelecek','Gelecek'),('demirde','Demirde'),('toros','Toros'),
                 ('iskeleler','İskeleler'),('k_samandira','Kuzey Şam.'),
@@ -73,8 +98,11 @@
               {% for dk, dl in all_durums %}
               {% if dk != key %}
               <button onclick="setDurum({{ v.id }}, '{{ dk }}')"
-                style="display:block;width:100%;padding:8px 14px;text-align:left;
-                       border:none;background:transparent;font-size:13px;cursor:pointer;color:#333">
+                style="display:block;width:100%;padding:9px 16px;text-align:left;
+                       border:none;background:transparent;font-size:13px;cursor:pointer;
+                       color:#333;transition:background .1s"
+                onmouseover="this.style.background='#f4f7fb'"
+                onmouseout="this.style.background='transparent'">
                 {{ dl }}
               </button>
               {% endif %}
@@ -93,125 +121,129 @@
 </div>
 {% endfor %}
 
-{# ── Alt panel: İrtibatta + Manevrada ── #}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px">
+{# ── Alt panel: İrtibatta + Manevrada (sabit, scroll'lu) ── #}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
 
   {# İrtibattaki Gemiler #}
-  <div class="card" style="padding:0">
-    <div style="padding:12px 16px;background:#EAF3DE;border-bottom:1px solid #c8e6b0;
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:11px 16px;background:#EAF3DE;border-bottom:1px solid #c8e6b0;
                 font-size:13px;font-weight:700;color:#27500A">
       🟢 İrtibattaki Gemiler
     </div>
-    {% set irtibat = vessels | selectattr('durum','equalto','irtibatta') | list %}
-    {% if irtibat %}
-    <table style="width:100%;border-collapse:collapse">
-      {% for v in irtibat %}
-      <tr style="border-bottom:1px solid #f0f0f0">
-        <td style="padding:10px 14px">
-          <div style="font-weight:700">{{ v.gemi_adi }}</div>
-          <div style="font-size:11px;color:#999">
-            {{ v.tip or '' }}{% if v.grt %} · {{ '{:,.0f}'.format(v.grt) }} GRT{% endif %}
-            {% if v.loa %} · {{ v.loa|int }}m{% endif %}
-          </div>
-        </td>
-        <td style="padding:10px 14px;text-align:right">
-          <div style="position:relative;display:inline-block">
-            <button onclick="toggleDurumMenu({{ v.id }}, event)"
-              style="padding:5px 12px;border-radius:6px;border:1px solid #dde8f5;
-                     background:#fff;font-size:12px;font-weight:600;color:#185FA5;cursor:pointer">
-              Taşı ▾
-            </button>
-            <div id="menu-{{ v.id }}" style="display:none;position:absolute;right:0;top:100%;
-                 background:#fff;border:1px solid #e0e0e0;border-radius:8px;
-                 box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:100;min-width:160px;padding:4px 0">
-              {% set all_durums = [
-                ('gelecek','Gelecek'),('demirde','Demirde'),('toros','Toros'),
-                ('iskeleler','İskeleler'),('k_samandira','Kuzey Şam.'),
-                ('g_samandira','Güney Şam.'),('manevrada','Manevrada')
-              ] %}
-              {% for dk, dl in all_durums %}
-              <button onclick="setDurum({{ v.id }}, '{{ dk }}')"
-                style="display:block;width:100%;padding:8px 14px;text-align:left;
-                       border:none;background:transparent;font-size:13px;cursor:pointer;color:#333">
-                {{ dl }}
-              </button>
-              {% endfor %}
+    <div style="max-height:210px;overflow-y:auto">
+      {% set irtibat = vessels | selectattr('durum','equalto','irtibatta') | list %}
+      {% if irtibat %}
+      <table style="width:100%;border-collapse:collapse">
+        {% for v in irtibat %}
+        <tr style="border-bottom:1px solid #f0f0f0">
+          <td style="padding:9px 14px">
+            <div style="font-weight:700;font-size:14px">{{ v.gemi_adi }}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:3px">
+              {% if v.loa %}<span style="font-size:11px;color:#999">Loa: <strong style="color:#555">{{ v.loa|int }}m</strong></span>{% endif %}
+              {% if v.grt %}<span style="font-size:11px;color:#999">Gt: <strong style="color:#555">{{ '{:,.0f}'.format(v.grt) }}</strong></span>{% endif %}
+              {% if v.tip %}<span style="font-size:11px;color:#999">{{ v.tip }}</span>{% endif %}
+              {% if v.thruster_bas > 0 or v.thruster_kic > 0 %}<span style="font-size:11px;color:#1a7a2e;font-weight:700">BT</span>{% endif %}
             </div>
-          </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-    {% else %}
-    <div style="padding:24px;text-align:center;color:#aaa;font-size:13px">İrtibatta gemi yok</div>
-    {% endif %}
+          </td>
+          <td style="padding:9px 14px;text-align:right;vertical-align:middle">
+            <div style="position:relative;display:inline-block">
+              <button onclick="toggleDurumMenu('irt_{{ v.id }}', event)"
+                style="padding:5px 11px;border-radius:6px;border:1px solid #dde8f5;
+                       background:#fff;font-size:11px;font-weight:700;color:#185FA5;cursor:pointer">
+                Taşı ▾
+              </button>
+              <div id="menu-irt_{{ v.id }}"
+                   style="display:none;position:fixed;background:#fff;border:1px solid #e0e0e0;
+                          border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);
+                          z-index:9999;min-width:160px;padding:4px 0">
+                {% for dk, dl in [('gelecek','Gelecek'),('demirde','Demirde'),('toros','Toros'),
+                  ('iskeleler','İskeleler'),('k_samandira','Kuzey Şam.'),
+                  ('g_samandira','Güney Şam.'),('manevrada','Manevrada')] %}
+                <button onclick="setDurum({{ v.id }}, '{{ dk }}')"
+                  style="display:block;width:100%;padding:8px 14px;text-align:left;
+                         border:none;background:transparent;font-size:13px;cursor:pointer;color:#333"
+                  onmouseover="this.style.background='#f4f7fb'"
+                  onmouseout="this.style.background='transparent'">{{ dl }}</button>
+                {% endfor %}
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div style="padding:24px;text-align:center;color:#aaa;font-size:13px">İrtibatta gemi yok</div>
+      {% endif %}
+    </div>
   </div>
 
   {# Manevradaki Gemiler #}
-  <div class="card" style="padding:0">
-    <div style="padding:12px 16px;background:#E6F1FB;border-bottom:1px solid #b8d4f0;
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:11px 16px;background:#E6F1FB;border-bottom:1px solid #b8d4f0;
                 font-size:13px;font-weight:700;color:#0C447C">
       ⚓ Manevradaki Gemiler
     </div>
-    {% set manevra = vessels | selectattr('durum','equalto','manevrada') | list %}
-    {% if manevra %}
-    <table style="width:100%;border-collapse:collapse">
-      {% for v in manevra %}
-      <tr style="border-bottom:1px solid #f0f0f0">
-        <td style="padding:10px 14px">
-          <div style="font-weight:700">{{ v.gemi_adi }}</div>
-          <div style="font-size:11px;color:#999">
-            {{ v.tip or '' }}{% if v.grt %} · {{ '{:,.0f}'.format(v.grt) }} GRT{% endif %}
-            {% if v.loa %} · {{ v.loa|int }}m{% endif %}
-          </div>
-        </td>
-        <td style="padding:10px 14px;text-align:right;white-space:nowrap">
-          <a href="/operations/add?vessel_id={{ v.id }}"
-             style="padding:5px 12px;border-radius:6px;background:#185FA5;color:#fff;
-                    font-size:12px;font-weight:700;text-decoration:none;margin-right:6px">
-            + İş Ekle
-          </a>
-          <div style="position:relative;display:inline-block">
-            <button onclick="toggleDurumMenu({{ v.id }}, event)"
-              style="padding:5px 12px;border-radius:6px;border:1px solid #dde8f5;
-                     background:#fff;font-size:12px;font-weight:600;color:#185FA5;cursor:pointer">
-              Taşı ▾
-            </button>
-            <div id="menu-{{ v.id }}" style="display:none;position:absolute;right:0;top:100%;
-                 background:#fff;border:1px solid #e0e0e0;border-radius:8px;
-                 box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:100;min-width:160px;padding:4px 0">
-              {% set all_durums = [
-                ('gelecek','Gelecek'),('demirde','Demirde'),('toros','Toros'),
-                ('iskeleler','İskeleler'),('k_samandira','Kuzey Şam.'),
-                ('g_samandira','Güney Şam.'),('irtibatta','İrtibatta')
-              ] %}
-              {% for dk, dl in all_durums %}
-              <button onclick="setDurum({{ v.id }}, '{{ dk }}')"
-                style="display:block;width:100%;padding:8px 14px;text-align:left;
-                       border:none;background:transparent;font-size:13px;cursor:pointer;color:#333">
-                {{ dl }}
-              </button>
-              {% endfor %}
+    <div style="max-height:210px;overflow-y:auto">
+      {% set manevra = vessels | selectattr('durum','equalto','manevrada') | list %}
+      {% if manevra %}
+      <table style="width:100%;border-collapse:collapse">
+        {% for v in manevra %}
+        <tr style="border-bottom:1px solid #f0f0f0">
+          <td style="padding:9px 14px">
+            <div style="font-weight:700;font-size:14px">{{ v.gemi_adi }}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:3px">
+              {% if v.loa %}<span style="font-size:11px;color:#999">Loa: <strong style="color:#555">{{ v.loa|int }}m</strong></span>{% endif %}
+              {% if v.grt %}<span style="font-size:11px;color:#999">Gt: <strong style="color:#555">{{ '{:,.0f}'.format(v.grt) }}</strong></span>{% endif %}
+              {% if v.tip %}<span style="font-size:11px;color:#999">{{ v.tip }}</span>{% endif %}
+              {% if v.thruster_bas > 0 or v.thruster_kic > 0 %}<span style="font-size:11px;color:#1a7a2e;font-weight:700">BT</span>{% endif %}
+              {% if v.from_liman %}<span style="font-size:11px;color:#999">Fr: <strong style="color:#555">{{ v.from_liman }}</strong></span>{% endif %}
+              {% if v.to_liman %}<span style="font-size:11px;color:#999">To: <strong style="color:#555">{{ v.to_liman }}</strong></span>{% endif %}
             </div>
-          </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </table>
-    {% else %}
-    <div style="padding:24px;text-align:center;color:#aaa;font-size:13px">Manevrada gemi yok</div>
-    {% endif %}
+          </td>
+          <td style="padding:9px 14px;text-align:right;vertical-align:middle;white-space:nowrap">
+            <a href="/operations/add?vessel_id={{ v.id }}"
+               style="padding:5px 11px;border-radius:6px;background:#185FA5;color:#fff;
+                      font-size:11px;font-weight:700;text-decoration:none;margin-right:5px">
+              + İş
+            </a>
+            <div style="position:relative;display:inline-block">
+              <button onclick="toggleDurumMenu('man_{{ v.id }}', event)"
+                style="padding:5px 11px;border-radius:6px;border:1px solid #dde8f5;
+                       background:#fff;font-size:11px;font-weight:700;color:#185FA5;cursor:pointer">
+                Taşı ▾
+              </button>
+              <div id="menu-man_{{ v.id }}"
+                   style="display:none;position:fixed;background:#fff;border:1px solid #e0e0e0;
+                          border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);
+                          z-index:9999;min-width:160px;padding:4px 0">
+                {% for dk, dl in [('gelecek','Gelecek'),('demirde','Demirde'),('toros','Toros'),
+                  ('iskeleler','İskeleler'),('k_samandira','Kuzey Şam.'),
+                  ('g_samandira','Güney Şam.'),('irtibatta','İrtibatta')] %}
+                <button onclick="setDurum({{ v.id }}, '{{ dk }}')"
+                  style="display:block;width:100%;padding:8px 14px;text-align:left;
+                         border:none;background:transparent;font-size:13px;cursor:pointer;color:#333"
+                  onmouseover="this.style.background='#f4f7fb'"
+                  onmouseout="this.style.background='transparent'">{{ dl }}</button>
+                {% endfor %}
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div style="padding:24px;text-align:center;color:#aaa;font-size:13px">Manevrada gemi yok</div>
+      {% endif %}
+    </div>
   </div>
 
 </div>
 
 <script>
-// Segment aç/kapat
 function toggleSegment(key) {
   var el = document.getElementById('seg-' + key);
   var btn = document.getElementById('btn-' + key);
   var isOpen = el.style.display !== 'none';
-  // Hepsini kapat
   ['gelecek','demirde','toros','iskeleler','k_samandira','g_samandira'].forEach(function(k) {
     document.getElementById('seg-' + k).style.display = 'none';
     document.getElementById('btn-' + k).style.background = '#fff';
@@ -227,34 +259,35 @@ function toggleSegment(key) {
   }
 }
 
-// Durum dropdown aç/kapat
 function toggleDurumMenu(id, e) {
   e.stopPropagation();
+  var btn = e.currentTarget;
+  var rect = btn.getBoundingClientRect();
   var menu = document.getElementById('menu-' + id);
-  var isOpen = menu.style.display !== 'none';
   // Tüm menüleri kapat
   document.querySelectorAll('[id^="menu-"]').forEach(function(m) {
     m.style.display = 'none';
   });
-  if (!isOpen) menu.style.display = 'block';
+  if (menu) {
+    menu.style.display = 'block';
+    // Ekranda nereye açılacağını hesapla
+    menu.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+    menu.style.left = (rect.right - 170 + window.scrollX) + 'px';
+  }
 }
 
-// Dışarı tıklayınca menüleri kapat
 document.addEventListener('click', function() {
   document.querySelectorAll('[id^="menu-"]').forEach(function(m) {
     m.style.display = 'none';
   });
 });
 
-// Durum güncelle
 function setDurum(vesselId, durum) {
   var form = new FormData();
   form.append('durum', durum);
   fetch('/vessels/' + vesselId + '/durum', {method: 'POST', body: form})
     .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d.ok) location.reload();
-    });
+    .then(function(d) { if (d.ok) location.reload(); });
 }
 </script>
 
