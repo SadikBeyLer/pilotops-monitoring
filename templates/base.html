@@ -8,21 +8,20 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F5F5F5;color:#1a1a1a;font-size:16px}
 .navbar{background:#fff;border-bottom:1px solid #e0e0e0;padding:0 24px;display:flex;align-items:center;gap:0;height:60px;position:relative;z-index:200}
-.nav-brand{font-weight:700;font-size:20px;color:#1a1a1a;margin-right:32px;text-decoration:none}
+.nav-brand{font-weight:700;font-size:23px;color:#1a1a1a;margin-right:32px;text-decoration:none}
 .nav-brand span{color:#185FA5}
-.nav-link{padding:0 16px;height:60px;display:flex;align-items:center;font-size:15px;color:#666;text-decoration:none;border-bottom:3px solid transparent}
+.nav-link{padding:0 16px;height:60px;display:flex;align-items:center;font-size:18px;color:#666;text-decoration:none;border-bottom:3px solid transparent}
 .nav-link:hover{color:#1a1a1a}
 .nav-link.active{color:#185FA5;border-bottom-color:#185FA5;font-weight:600}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:12px;position:relative}
 
 .watch-btn{background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4;border-radius:20px;
-  padding:5px 16px;font-size:14px;font-weight:600;cursor:pointer;
+  padding:5px 16px;font-size:17px;font-weight:600;cursor:pointer;
   display:flex;align-items:center;gap:6px;transition:background .15s}
 .watch-btn:hover{background:#cfe4f8}
 .watch-arrow{font-size:11px;opacity:.6;transition:transform .2s}
 .watch-arrow.open{transform:rotate(180deg)}
 
-/* Dropdown — sağa taşmayı önlemek için right:0, max-width ayarlı */
 .watch-dropdown{
   display:none;
   position:absolute;
@@ -39,9 +38,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 }
 .watch-dropdown.open{display:block}
 
-.container{max-width:1200px;margin:0 auto;padding:24px}
+.container{max-width:1440px;margin:0 auto;padding:24px}
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.page-title{font-size:20px;font-weight:700}
+.page-title{font-size:23px;font-weight:700}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;font-size:15px;font-weight:500;cursor:pointer;text-decoration:none;border:1px solid transparent}
 .btn-primary{background:#185FA5;color:#fff;border-color:#185FA5}
 .btn-primary:hover{background:#0C447C}
@@ -75,7 +74,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="nav-right">
     <a href="/pilots" class="nav-link {% if request.endpoint=='pilots' or request.endpoint=='pilot_add' %}active{% endif %}">Pilots</a>
 
-    {# Watch dropdown — sadece ana ekranda (index) göster #}
     {% if watch and request.endpoint == 'index' %}
     <button class="watch-btn" id="watch-nav-btn" onclick="toggleWatchDropdown()" type="button">
       <span id="watch-nav-label">{{ watch.watch_no }}</span>
@@ -88,7 +86,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       </div>
 
       <form method="POST" action="/watches/set-active" id="nav-watch-form">
-        {# Watch 1/2/3 seçim butonları #}
         <div style="display:flex;gap:8px;margin-bottom:14px">
           {% for w in all_watches %}
           <label id="nwlbl-{{ w.id }}"
@@ -110,7 +107,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           {% endfor %}
         </div>
 
-        {# From / To — alt alta, taşma yok #}
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
           <div style="display:flex;flex-direction:column;gap:4px">
             <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#888;letter-spacing:.05em">From</label>
@@ -155,12 +151,7 @@ function toggleWatchDropdown() {
   if(!dd) return;
   var isOpen=dd.classList.contains('open');
   if(isOpen){ dd.classList.remove('open'); arrow.classList.remove('open'); }
-  else {
-    // Tarihleri doldur: bugün 12:00 ve 7 gün sonra 12:00
-    setDefaultDates();
-    dd.classList.add('open');
-    arrow.classList.add('open');
-  }
+  else { setDefaultDates(); dd.classList.add('open'); arrow.classList.add('open'); }
 }
 function closeWatchDropdown() {
   var dd=document.getElementById('watch-dropdown');
@@ -168,31 +159,14 @@ function closeWatchDropdown() {
   if(dd) dd.classList.remove('open');
   if(arrow) arrow.classList.remove('open');
 }
-
 function setDefaultDates() {
   var from=document.getElementById('nav-baslangic');
   var to=document.getElementById('nav-bitis');
-  if(!from || !to) return;
-
-  // Eğer zaten bir değer varsa (sunucudan gelen) dokunma
-  // Boşsa default koy
-  if(!from.value) {
-    var now = new Date();
-    now.setHours(12,0,0,0);
-    from.value = toLocalISO(now);
-    from.style.color = '#aaa';
-  }
-  if(!to.value) {
-    var later = new Date();
-    later.setDate(later.getDate()+7);
-    later.setHours(12,0,0,0);
-    to.value = toLocalISO(later);
-    to.style.color = '#aaa';
-  }
+  if(!from||!to) return;
+  if(!from.value){var now=new Date();now.setHours(12,0,0,0);from.value=toLocalISO(now);from.style.color='#aaa';}
+  if(!to.value){var later=new Date();later.setDate(later.getDate()+7);later.setHours(12,0,0,0);to.value=toLocalISO(later);to.style.color='#aaa';}
 }
-
 function toLocalISO(date) {
-  // datetime-local formatı: YYYY-MM-DDTHH:MM
   var y=date.getFullYear();
   var m=String(date.getMonth()+1).padStart(2,'0');
   var d=String(date.getDate()).padStart(2,'0');
@@ -200,9 +174,7 @@ function toLocalISO(date) {
   var min=String(date.getMinutes()).padStart(2,'0');
   return y+'-'+m+'-'+d+'T'+h+':'+min;
 }
-
-// Odaklanınca rengi koyulaştır
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded',function(){
   ['nav-baslangic','nav-bitis'].forEach(function(id){
     var el=document.getElementById(id);
     if(!el) return;
@@ -210,7 +182,6 @@ document.addEventListener('DOMContentLoaded', function(){
     el.addEventListener('input',function(){this.style.color='#1a1a1a';});
   });
 });
-
 function navSelectWatch(id) {
   [1,2,3].forEach(function(i){
     var lbl=document.getElementById('nwlbl-'+i);
@@ -218,19 +189,17 @@ function navSelectWatch(id) {
     var status=document.getElementById('nwlbl-status-'+i);
     if(!lbl) return;
     if(i===id){
-      lbl.style.borderColor='#185FA5'; lbl.style.background='#EEF5FF';
+      lbl.style.borderColor='#185FA5';lbl.style.background='#EEF5FF';
       if(txt) txt.style.color='#185FA5';
       if(status){status.textContent='Aktif';status.style.background='#EAF3DE';status.style.color='#27500A';}
     } else {
-      lbl.style.borderColor='#d8d8d8'; lbl.style.background='#fff';
+      lbl.style.borderColor='#d8d8d8';lbl.style.background='#fff';
       if(txt) txt.style.color='#555';
       if(status){status.textContent='Pasif';status.style.background='#f0f0f0';status.style.color='#888';}
     }
   });
 }
-
-// Dışarı tıklayınca kapat
-document.addEventListener('click', function(e){
+document.addEventListener('click',function(e){
   var btn=document.getElementById('watch-nav-btn');
   var dd=document.getElementById('watch-dropdown');
   if(!dd||!btn) return;
