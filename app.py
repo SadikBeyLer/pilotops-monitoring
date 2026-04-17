@@ -430,8 +430,13 @@ def operation_add():
         ))
         db.commit()
         return redirect(url_for('index'))
-    pilots  = db.execute("SELECT * FROM pilots WHERE aktif=1 ORDER BY ad_soyad").fetchall()
-    vessels = db.execute("SELECT * FROM vessels ORDER BY gemi_adi").fetchall()
+    pilots  = db.execute("""
+        SELECT p.* FROM pilots p
+        JOIN watches w ON w.id = p.watch_id
+        WHERE p.aktif=1 AND w.aktif=1
+        ORDER BY p.ad_soyad
+    """).fetchall()
+    vessels = db.execute("SELECT * FROM vessels WHERE durum='manevrada' ORDER BY gemi_adi").fetchall()
     return render_template('operation_add.html',pilots=pilots,vessels=vessels,
                            samandiralar=SAMANDIRALAR)
 

@@ -125,20 +125,6 @@
   </div>
 </div>
 
-<div class="section">
-  <div class="section-title">F/A Drafts</div>
-  <div class="grid2">
-    <div class="form-group">
-      <label>Baş draft (m)</label>
-      <input type="number" name="draft_bas" placeholder="6.50" step="0.01" min="0" max="25">
-    </div>
-    <div class="form-group">
-      <label>Kıç draft (m)</label>
-      <input type="number" name="draft_kic" placeholder="7.20" step="0.01" min="0" max="25">
-    </div>
-  </div>
-</div>
-
 <div class="section" id="fatigue-section">
   <div class="section-title">Fatigue önizleme</div>
   <div style="display:flex;align-items:center;justify-content:space-between;background:#f8f8f8;border-radius:8px;padding:12px 16px">
@@ -171,6 +157,21 @@
 
 <script>
 var SAMANDIRALAR = {{ samandiralar | tojson }};
+// Sayfa açılınca 4 saat alanını şu anki zaman ile doldur
+(function setNow(){
+  var now = new Date();
+  var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
+  var str = now.getFullYear() + '-' +
+            pad(now.getMonth() + 1) + '-' +
+            pad(now.getDate()) + 'T' +
+            pad(now.getHours()) + ':' +
+            pad(now.getMinutes());
+  document.getElementById('t-off').value  = str;
+  document.getElementById('t-pob').value  = str;
+  document.getElementById('t-poff').value = str;
+  document.getElementById('t-on').value   = str;
+  calcSure();
+})();
 var currentFatigue = 0;
 var currentK = 1.0;
 
