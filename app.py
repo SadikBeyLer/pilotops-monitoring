@@ -32,6 +32,19 @@ def init_db():
     db.row_factory = sqlite3.Row
     with open('pilotops_schema.sql', 'r', encoding='utf-8') as f:
         db.executescript(f.read())
+    try:
+        db.execute("ALTER TABLE pilots ADD COLUMN watch_id INTEGER REFERENCES watches(id)")
+    except Exception:
+        pass
+    try:
+        db.execute("""CREATE TABLE IF NOT EXISTS pilot_izin (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pilot_id INTEGER NOT NULL REFERENCES pilots(id),
+            watch_id INTEGER REFERENCES watches(id),
+            baslangic TEXT, bitis TEXT, aktif INTEGER DEFAULT 1
+        )""")
+    except Exception:
+        pass
     db.commit()
     db.close()
 
@@ -444,5 +457,4 @@ if __name__ == '__main__':
     app.run(debug=True, port=5001)
 
 with app.app_context():
-    if not os.path.exists(DATABASE):
-        init_db()
+    init_db()
