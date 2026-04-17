@@ -347,6 +347,16 @@ def vessel_add():
         return redirect(url_for('vessels'))
     return render_template('vessel_add.html')
 
+
+# ── Gemi Durum Güncelle ──────────────────────────────────────
+@app.route('/vessels/<int:vessel_id>/durum', methods=['POST'])
+def vessel_durum(vessel_id):
+    db = get_db()
+    durum = request.form.get('durum','')
+    db.execute("UPDATE vessels SET durum=? WHERE id=?", (durum, vessel_id))
+    db.commit()
+    return jsonify({'ok': True, 'durum': durum})
+
 # ── İş Girişi ────────────────────────────────────────────────
 @app.route('/operations/add', methods=['GET','POST'])
 def operation_add():

@@ -1,53 +1,261 @@
 {% extends 'base.html' %}
 {% block title %}Gemiler — PilotOps{% endblock %}
 {% block content %}
+
 <div class="page-header">
   <div class="page-title">Gemiler</div>
   <a href="/vessels/add" class="btn btn-primary">+ Gemi ekle</a>
 </div>
-<div class="card">
-<table style="width:100%;border-collapse:collapse;table-layout:fixed">
-  <thead>
-    <tr style="background:#F8F8F8;border-bottom:1px solid #e8e8e8">
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Gemi adı</th>
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#888;width:80px">Tip</th>
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Bayrak</th>
-      <th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:#888;width:90px">GRT</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;color:#888;width:90px">Durum</th>
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">ETA</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for v in vessels %}
-  <tr style="border-bottom:1px solid #f0f0f0">
-    <td style="padding:10px 14px">
-      <div style="font-weight:600">{{ v.gemi_adi }}</div>
-      {% if v.imo_no %}<div style="font-size:11px;color:#999">{{ v.imo_no }}</div>{% endif %}
-    </td>
-    <td style="padding:10px 14px">
-      <span class="badge badge-blue">{{ v.tip or '—' }}</span>
-    </td>
-    <td style="padding:10px 14px;color:#666;font-size:13px">{{ v.bayrak or '—' }}</td>
-    <td style="padding:10px 14px;text-align:right;font-size:13px">{{ '{:,.0f}'.format(v.grt or 0) }}</td>
-    <td style="padding:10px 14px;text-align:center">
-      {% if v.durum == 'limanda' %}
-        <span class="badge badge-green">Limanda</span>
-      {% elif v.durum == 'demirde' %}
-        <span class="badge badge-blue">Demirde</span>
-      {% else %}
-        <span class="badge" style="background:#F1EFE8;color:#5F5E5A">Yolda</span>
-      {% endif %}
-    </td>
-    <td style="padding:10px 14px;font-size:12px;color:#666">
-      {{ v.gelis_zamani[:16] if v.gelis_zamani else '—' }}
-    </td>
-  </tr>
-  {% else %}
-  <tr><td colspan="6" style="padding:32px;text-align:center;color:#aaa">
-    Henüz gemi yok — <a href="/vessels/add" style="color:#185FA5">gemi ekle</a>
-  </td></tr>
+
+{# ── Segmentler ── #}
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px">
+  {% set segments = [
+    ('gelecek',     'Gelecek'),
+    ('demirde',     'Demirde'),
+    ('toros',       'Toros'),
+    ('iskeleler',   'İskeleler'),
+    ('k_samandira', 'Kuzey Şamandıralar'),
+    ('g_samandira', 'Güney Şamandıralar')
+  ] %}
+  {% for key, label in segments %}
+  {% set count = vessels | selectattr('durum','equalto', key) | list | length %}
+  <button onclick="toggleSegment('{{ key }}')" id="btn-{{ key }}"
+    style="padding:7px 16px;border-radius:20px;border:1.5px solid #dde8f5;background:#fff;
+           font-size:13px;font-weight:600;color:#555;cursor:pointer;transition:all .15s;
+           display:flex;align-items:center;gap:7px">
+    {{ label }}
+    {% if count > 0 %}
+    <span style="background:#185FA5;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px">{{ count }}</span>
+    {% endif %}
+  </button>
   {% endfor %}
-  </tbody>
-</table>
 </div>
+
+{# ── Segment içerikleri ── #}
+{% for key, label in segments %}
+<div id="seg-{{ key }}" style="display:none;margin-bottom:18px">
+  <div class="card" style="padding:0">
+    <div style="padding:12px 16px;background:#F4F7FB;border-bottom:1px solid #dde8f5;
+                font-size:13px;font-weight:700;color:#185FA5">
+      {{ label }}
+    </div>
+    {% set seg_vessels = vessels | selectattr('durum','equalto', key) | list %}
+    {% if seg_vessels %}
+    <table style="width:100%;border-collapse:collapse">
+      <tbody>
+      {% for v in seg_vessels %}
+      <tr style="border-bottom:1px solid #f0f0f0">
+        <td style="padding:10px 16px">
+          <div style="font-weight:700;font-size:15px">{{ v.gemi_adi }}</div>
+          <div style="font-size:11px;color:#999;margin-top:2px">
+            {{ v.tip or '' }}{% if v.tip and v.grt %} · {% endif %}
+            {% if v.grt %}{{ '{:,.0f}'.format(v.grt) }} GRT{% endif %}
+            {% if v.loa %} · {{ v.loa|int }}m{% endif %}
+            {% if v.thruster_bas > 0 or v.thruster_kic > 0 %} · BT: Yes{% endif %}
+          </div>
+        </td>
+        <td style="padding:10px 16px;text-align:right">
+          {# Durum değiştir dropdown #}
+          <div style="position:relative;display:inline-block">
+            <button onclick="toggleDurumMenu({{ v.id }}, event)"
+              style="padding:5px 12px;border-radius:6px;border:1px solid #dde8f5;
+                     background:#fff;font-size:12px;font-weight:600;color:#185FA5;cursor:pointer">
+              Taşı ▾
+            </button>
+            <div id="menu-{{ v.id }}" style="display:none;position:absolute;right:0;top:100%;
+                 background:#fff;border:1px solid #e0e0e0;border-radius:8px;
+                 box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:100;min-width:160px;padding:4px 0">
+              {% set all_durums = [
+                ('gelecek','Gelecek'),('demirde','Demirde'),('toros','Toros'),
+                ('iskeleler','İskeleler'),('k_samandira','Kuzey Şam.'),
+                ('g_samandira','Güney Şam.'),('manevrada','Manevrada'),('irtibatta','İrtibatta')
+              ] %}
+              {% for dk, dl in all_durums %}
+              {% if dk != key %}
+              <button onclick="setDurum({{ v.id }}, '{{ dk }}')"
+                style="display:block;width:100%;padding:8px 14px;text-align:left;
+                       border:none;background:transparent;font-size:13px;cursor:pointer;color:#333">
+                {{ dl }}
+              </button>
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:24px;text-align:center;color:#aaa;font-size:13px">Bu segmentte gemi yok</div>
+    {% endif %}
+  </div>
+</div>
+{% endfor %}
+
+{# ── Alt panel: İrtibatta + Manevrada ── #}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px">
+
+  {# İrtibattaki Gemiler #}
+  <div class="card" style="padding:0">
+    <div style="padding:12px 16px;background:#EAF3DE;border-bottom:1px solid #c8e6b0;
+                font-size:13px;font-weight:700;color:#27500A">
+      🟢 İrtibattaki Gemiler
+    </div>
+    {% set irtibat = vessels | selectattr('durum','equalto','irtibatta') | list %}
+    {% if irtibat %}
+    <table style="width:100%;border-collapse:collapse">
+      {% for v in irtibat %}
+      <tr style="border-bottom:1px solid #f0f0f0">
+        <td style="padding:10px 14px">
+          <div style="font-weight:700">{{ v.gemi_adi }}</div>
+          <div style="font-size:11px;color:#999">
+            {{ v.tip or '' }}{% if v.grt %} · {{ '{:,.0f}'.format(v.grt) }} GRT{% endif %}
+            {% if v.loa %} · {{ v.loa|int }}m{% endif %}
+          </div>
+        </td>
+        <td style="padding:10px 14px;text-align:right">
+          <div style="position:relative;display:inline-block">
+            <button onclick="toggleDurumMenu({{ v.id }}, event)"
+              style="padding:5px 12px;border-radius:6px;border:1px solid #dde8f5;
+                     background:#fff;font-size:12px;font-weight:600;color:#185FA5;cursor:pointer">
+              Taşı ▾
+            </button>
+            <div id="menu-{{ v.id }}" style="display:none;position:absolute;right:0;top:100%;
+                 background:#fff;border:1px solid #e0e0e0;border-radius:8px;
+                 box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:100;min-width:160px;padding:4px 0">
+              {% set all_durums = [
+                ('gelecek','Gelecek'),('demirde','Demirde'),('toros','Toros'),
+                ('iskeleler','İskeleler'),('k_samandira','Kuzey Şam.'),
+                ('g_samandira','Güney Şam.'),('manevrada','Manevrada')
+              ] %}
+              {% for dk, dl in all_durums %}
+              <button onclick="setDurum({{ v.id }}, '{{ dk }}')"
+                style="display:block;width:100%;padding:8px 14px;text-align:left;
+                       border:none;background:transparent;font-size:13px;cursor:pointer;color:#333">
+                {{ dl }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div style="padding:24px;text-align:center;color:#aaa;font-size:13px">İrtibatta gemi yok</div>
+    {% endif %}
+  </div>
+
+  {# Manevradaki Gemiler #}
+  <div class="card" style="padding:0">
+    <div style="padding:12px 16px;background:#E6F1FB;border-bottom:1px solid #b8d4f0;
+                font-size:13px;font-weight:700;color:#0C447C">
+      ⚓ Manevradaki Gemiler
+    </div>
+    {% set manevra = vessels | selectattr('durum','equalto','manevrada') | list %}
+    {% if manevra %}
+    <table style="width:100%;border-collapse:collapse">
+      {% for v in manevra %}
+      <tr style="border-bottom:1px solid #f0f0f0">
+        <td style="padding:10px 14px">
+          <div style="font-weight:700">{{ v.gemi_adi }}</div>
+          <div style="font-size:11px;color:#999">
+            {{ v.tip or '' }}{% if v.grt %} · {{ '{:,.0f}'.format(v.grt) }} GRT{% endif %}
+            {% if v.loa %} · {{ v.loa|int }}m{% endif %}
+          </div>
+        </td>
+        <td style="padding:10px 14px;text-align:right;white-space:nowrap">
+          <a href="/operations/add?vessel_id={{ v.id }}"
+             style="padding:5px 12px;border-radius:6px;background:#185FA5;color:#fff;
+                    font-size:12px;font-weight:700;text-decoration:none;margin-right:6px">
+            + İş Ekle
+          </a>
+          <div style="position:relative;display:inline-block">
+            <button onclick="toggleDurumMenu({{ v.id }}, event)"
+              style="padding:5px 12px;border-radius:6px;border:1px solid #dde8f5;
+                     background:#fff;font-size:12px;font-weight:600;color:#185FA5;cursor:pointer">
+              Taşı ▾
+            </button>
+            <div id="menu-{{ v.id }}" style="display:none;position:absolute;right:0;top:100%;
+                 background:#fff;border:1px solid #e0e0e0;border-radius:8px;
+                 box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:100;min-width:160px;padding:4px 0">
+              {% set all_durums = [
+                ('gelecek','Gelecek'),('demirde','Demirde'),('toros','Toros'),
+                ('iskeleler','İskeleler'),('k_samandira','Kuzey Şam.'),
+                ('g_samandira','Güney Şam.'),('irtibatta','İrtibatta')
+              ] %}
+              {% for dk, dl in all_durums %}
+              <button onclick="setDurum({{ v.id }}, '{{ dk }}')"
+                style="display:block;width:100%;padding:8px 14px;text-align:left;
+                       border:none;background:transparent;font-size:13px;cursor:pointer;color:#333">
+                {{ dl }}
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div style="padding:24px;text-align:center;color:#aaa;font-size:13px">Manevrada gemi yok</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+// Segment aç/kapat
+function toggleSegment(key) {
+  var el = document.getElementById('seg-' + key);
+  var btn = document.getElementById('btn-' + key);
+  var isOpen = el.style.display !== 'none';
+  // Hepsini kapat
+  ['gelecek','demirde','toros','iskeleler','k_samandira','g_samandira'].forEach(function(k) {
+    document.getElementById('seg-' + k).style.display = 'none';
+    document.getElementById('btn-' + k).style.background = '#fff';
+    document.getElementById('btn-' + k).style.color = '#555';
+    document.getElementById('btn-' + k).style.borderColor = '#dde8f5';
+  });
+  if (!isOpen) {
+    el.style.display = 'block';
+    btn.style.background = '#185FA5';
+    btn.style.color = '#fff';
+    btn.style.borderColor = '#185FA5';
+    el.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+}
+
+// Durum dropdown aç/kapat
+function toggleDurumMenu(id, e) {
+  e.stopPropagation();
+  var menu = document.getElementById('menu-' + id);
+  var isOpen = menu.style.display !== 'none';
+  // Tüm menüleri kapat
+  document.querySelectorAll('[id^="menu-"]').forEach(function(m) {
+    m.style.display = 'none';
+  });
+  if (!isOpen) menu.style.display = 'block';
+}
+
+// Dışarı tıklayınca menüleri kapat
+document.addEventListener('click', function() {
+  document.querySelectorAll('[id^="menu-"]').forEach(function(m) {
+    m.style.display = 'none';
+  });
+});
+
+// Durum güncelle
+function setDurum(vesselId, durum) {
+  var form = new FormData();
+  form.append('durum', durum);
+  fetch('/vessels/' + vesselId + '/durum', {method: 'POST', body: form})
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.ok) location.reload();
+    });
+}
+</script>
+
 {% endblock %}
