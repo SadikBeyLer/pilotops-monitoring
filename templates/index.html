@@ -60,7 +60,7 @@
     {# # #}
     <td style="padding:11px 14px;color:#bbb;font-size:14px">{{ loop.index }}</td>
 
-    {# Pilot adı — telefon yok #}
+    {# Pilot adı #}
     <td style="padding:11px 14px">
       <div style="font-weight:700;font-size:15px;color:#1a1a1a">{{ p.ad_soyad }}</div>
     </td>
@@ -100,24 +100,37 @@
       {% endif %}
     </td>
 
-    {# Active Vessel + detaylar #}
-    <td style="padding:11px 14px;min-width:180px">
+    {# Active Vessel — YENİ FORMAT #}
+    <td style="padding:11px 14px;min-width:220px">
       {% if p.aktif_gemi %}
-      <div style="font-size:15px;font-weight:700;color:#185FA5">{{ p.aktif_gemi }}</div>
-      <div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:6px">
+
+      {# Satır 1: GEMİ ADI (büyük/mavi) + silik Loa ve Gt #}
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+        <span style="font-size:15px;font-weight:700;color:#185FA5;text-transform:uppercase">{{ p.aktif_gemi }}</span>
         {% if p.aktif_loa %}
-        <span style="font-size:11px;color:#999">LOA: <span style="color:#666">{{ p.aktif_loa|int }}m</span></span>
+        <span style="font-size:11px;color:#bbb">Loa: {{ p.aktif_loa|int }}m</span>
         {% endif %}
         {% if p.aktif_grt %}
-        <span style="font-size:11px;color:#999">GT: <span style="color:#666">{{ p.aktif_grt|int }}</span></span>
+        <span style="font-size:11px;color:#bbb">Gt: {{ p.aktif_grt|int }}</span>
         {% endif %}
+      </div>
+
+      {# Satır 2: Fr, To, BT #}
+      <div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
         {% if p.aktif_from %}
         <span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ p.aktif_from }}</span></span>
         {% endif %}
         {% if p.aktif_to %}
         <span style="font-size:11px;color:#999">To: <span style="color:#666">{{ p.aktif_to }}</span></span>
         {% endif %}
+        {# BT (Bow Thruster) — thruster alanından #}
+        {% if p.aktif_thruster %}
+          <span style="font-size:11px;color:#999">BT: <span style="color:#1a7a2e;font-weight:700">Yes</span></span>
+        {% else %}
+          <span style="font-size:11px;color:#999">BT: <span style="color:#aaa">No</span></span>
+        {% endif %}
       </div>
+
       {% else %}
       <span style="color:#ccc">—</span>
       {% endif %}
