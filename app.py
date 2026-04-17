@@ -25,6 +25,9 @@ def close_db(e=None):
     if db: db.close()
 
 def init_db():
+    db_dir = os.path.dirname(DATABASE)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir, exist_ok=True)
     db = sqlite3.connect(DATABASE)
     db.row_factory = sqlite3.Row
     with open('pilotops_schema.sql', 'r', encoding='utf-8') as f:
