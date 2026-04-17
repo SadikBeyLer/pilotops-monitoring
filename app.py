@@ -161,6 +161,14 @@ def watch_set_active():
     db.commit()
     return redirect(url_for('pilots'))
 
+# ── Pilot Sil ───────────────────────────────────────────────
+@app.route('/pilots/<int:pilot_id>/sil', methods=['POST'])
+def pilot_sil(pilot_id):
+    db = get_db()
+    db.execute("UPDATE pilots SET aktif=0 WHERE id=?", (pilot_id,))
+    db.commit()
+    return redirect(url_for('pilots'))
+
 # ── İzin Toggle ──────────────────────────────────────────────
 @app.route('/pilots/<int:pilot_id>/izin-toggle', methods=['POST'])
 def pilot_izin_toggle(pilot_id):

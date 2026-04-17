@@ -8,7 +8,6 @@
     Aktif Watch Seç
   </div>
   <form method="POST" action="/watches/set-active" id="watch-form">
-    {# Watch 1/2/3 seçim butonları #}
     <div style="display:flex;gap:10px;margin-bottom:16px">
       {% for w in watches %}
       <label id="wlbl-{{ w.id }}"
@@ -32,7 +31,6 @@
       {% endfor %}
     </div>
 
-    {# Tarih girişi #}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
       <div class="form-group" style="margin-bottom:0">
         <label>Vardiya Başlangıç</label>
@@ -63,104 +61,118 @@
 <table style="width:100%;border-collapse:collapse" id="pilots-table">
   <thead>
     <tr style="background:#F8F8F8;border-bottom:1px solid #e8e8e8">
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#888;width:36px"></th>
+      <th style="padding:10px 14px;width:36px"></th>
       <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Ad Soyad</th>
       <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Telefon</th>
       <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Watch</th>
       <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;color:#888">Durum</th>
+      <th style="padding:10px 14px;width:70px"></th>
     </tr>
   </thead>
   <tbody id="pilots-tbody">
 
+  {% set ns = namespace(prev_watch=None) %}
   {% for p in pilots %}
-  {# ── Pilot satırı ── #}
-  <tr style="border-bottom:1px solid #f0f0f0" id="pilot-row-{{ p.id }}">
-    {# Expand ok — ileride kullanım için #}
-    <td style="padding:10px 14px;color:#bbb;font-size:13px;text-align:center">›</td>
-    <td style="padding:10px 14px;font-weight:600;
-               {% if p.izinde %}color:#aaa;text-decoration:line-through{% endif %}">
-      {{ p.ad_soyad }}
-    </td>
-    <td style="padding:10px 14px;color:{% if p.izinde %}#bbb{% else %}#666{% endif %}">
-      {{ p.telefon or '—' }}
-    </td>
-    <td style="padding:10px 14px;text-align:center">
-      {% if p.watch_no %}
-      <span style="background:#E6F1FB;color:#0C447C;border-radius:12px;padding:3px 10px;font-size:12px;font-weight:600">
-        {{ p.watch_no }}
-      </span>
-      {% else %}
-      <span style="color:#bbb;font-size:13px">—</span>
-      {% endif %}
-    </td>
-    <td style="padding:10px 14px;text-align:center">
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px">
-        {# İzin butonu #}
-        <form method="POST" action="/pilots/{{ p.id }}/izin-toggle" style="display:inline">
-          <button type="submit"
-                  style="background:{% if p.izinde %}#FFF3CD{% else %}#f5f5f5{% endif %};
-                         color:{% if p.izinde %}#856404{% else %}#888{% endif %};
-                         border:1px solid {% if p.izinde %}#FFDBA0{% else %}#ddd{% endif %};
-                         border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;
-                         cursor:pointer"
-                  title="{% if p.izinde %}İzni Kaldır{% else %}İzne Çıkar{% endif %}">
-            {% if p.izinde %}İzinde{% else %}İzin{% endif %}
-          </button>
-        </form>
-        {# Aktif/Pasif badge #}
-        {% if p.izinde %}
-        <span class="badge" style="background:#e0e0e0;color:#888">Pasif</span>
+
+    {# Watch grup başlığı #}
+    {% if p.watch_no != ns.prev_watch %}
+    {% set ns.prev_watch = p.watch_no %}
+    <tr>
+      <td colspan="6"
+          style="padding:8px 14px 5px;
+                 background:#F4F7FB;
+                 border-top:{% if loop.index > 1 %}2px solid #dde8f5{% else %}none{% endif %};
+                 border-bottom:1px solid #dde8f5">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;
+                     letter-spacing:.1em;color:#185FA5">
+          {% if p.watch_no %}{{ p.watch_no }}{% else %}Watch Atanmamış{% endif %}
+        </span>
+      </td>
+    </tr>
+    {% endif %}
+
+    {# Pilot satırı #}
+    <tr style="border-bottom:1px solid #f0f0f0" id="pilot-row-{{ p.id }}">
+      <td style="padding:10px 14px;color:#bbb;font-size:13px;text-align:center">›</td>
+      <td style="padding:10px 14px;font-weight:600;
+                 {% if p.izinde %}color:#aaa;text-decoration:line-through{% endif %}">
+        {{ p.ad_soyad }}
+      </td>
+      <td style="padding:10px 14px;color:{% if p.izinde %}#bbb{% else %}#666{% endif %}">
+        {{ p.telefon or '—' }}
+      </td>
+      <td style="padding:10px 14px;text-align:center">
+        {% if p.watch_no %}
+        <span style="background:#E6F1FB;color:#0C447C;border-radius:12px;padding:3px 10px;font-size:12px;font-weight:600">
+          {{ p.watch_no }}
+        </span>
         {% else %}
-        <span class="badge badge-green">Aktif</span>
+        <span style="color:#bbb;font-size:13px">—</span>
         {% endif %}
-      </div>
-    </td>
-  </tr>
+      </td>
+      <td style="padding:10px 14px;text-align:center">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px">
+          <form method="POST" action="/pilots/{{ p.id }}/izin-toggle" style="display:inline">
+            <button type="submit"
+                    style="background:{% if p.izinde %}#FFF3CD{% else %}#f5f5f5{% endif %};
+                           color:{% if p.izinde %}#856404{% else %}#888{% endif %};
+                           border:1px solid {% if p.izinde %}#FFDBA0{% else %}#ddd{% endif %};
+                           border-radius:8px;padding:3px 10px;font-size:12px;font-weight:600;cursor:pointer">
+              {% if p.izinde %}İzinde{% else %}İzin{% endif %}
+            </button>
+          </form>
+          {% if p.izinde %}
+          <span class="badge" style="background:#e0e0e0;color:#888">Pasif</span>
+          {% else %}
+          <span class="badge badge-green">Aktif</span>
+          {% endif %}
+        </div>
+      </td>
+      <td style="padding:10px 14px;text-align:center">
+        <button onclick="silOnay({{ p.id }}, '{{ p.ad_soyad }}')"
+                style="background:none;border:1px solid #ffb3b3;border-radius:7px;
+                       padding:3px 10px;color:#c0152a;font-size:12px;font-weight:600;cursor:pointer"
+                onmouseover="this.style.background='#fff0f0'"
+                onmouseout="this.style.background='none'">
+          Sil
+        </button>
+      </td>
+    </tr>
 
   {% else %}
-  {# Hiç pilot yoksa #}
   <tr id="no-pilots-row">
-    <td colspan="5" style="padding:32px;text-align:center;color:#aaa">
-      Henüz kaptan yok
-    </td>
+    <td colspan="6" style="padding:32px;text-align:center;color:#aaa">Henüz kaptan yok</td>
   </tr>
   {% endfor %}
 
-  {# ── Inline Form Satırı (başlangıçta gizli) ── #}
+  {# ── Inline Form Satırı ── #}
   <tr id="inline-form-row" style="display:none;background:#F0F6FF;border-bottom:1px solid #d0e4ff">
-    <td colspan="5" style="padding:0">
+    <td colspan="6" style="padding:0">
       <div style="display:flex;align-items:flex-end;gap:12px;padding:14px 16px">
-
-        {# Sol: Bilgi alanları #}
         <div style="display:flex;gap:10px;flex:1;flex-wrap:wrap;align-items:flex-end">
 
           <div style="display:flex;flex-direction:column;gap:4px;min-width:180px">
-            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">
-              Ad Soyad *
-            </label>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Ad Soyad *</label>
             <input type="text" id="new-ad-soyad" placeholder="Ahmet Yılmaz"
                    style="border:1px solid #B5D4F4;border-radius:7px;padding:8px 11px;font-size:14px;width:100%;background:#fff">
           </div>
 
           <div style="display:flex;flex-direction:column;gap:4px;min-width:150px">
-            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">
-              Telefon
-            </label>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Telefon</label>
             <input type="tel" id="new-telefon" placeholder="0 (532) 000 0000"
                    style="border:1px solid #B5D4F4;border-radius:7px;padding:8px 11px;font-size:14px;width:100%;background:#fff">
           </div>
 
           <div style="display:flex;flex-direction:column;gap:4px">
-            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">
-              Watch
-            </label>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;letter-spacing:.04em">Watch</label>
             <div style="display:flex;gap:6px">
               {% for w in watches %}
               <label id="new-wlbl-{{ w.id }}"
                      style="display:flex;align-items:center;gap:5px;padding:7px 12px;
-                            border:1px solid #d8d8d8;border-radius:7px;cursor:pointer;
-                            font-size:13px;font-weight:600;background:#fff;
-                            {% if w.aktif %}border-color:#185FA5;background:#EEF5FF;color:#185FA5{% endif %}">
+                            border:1px solid {% if w.aktif %}#185FA5{% else %}#d8d8d8{% endif %};
+                            border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;
+                            background:{% if w.aktif %}#EEF5FF{% else %}#fff{% endif %};
+                            color:{% if w.aktif %}#185FA5{% else %}#444{% endif %}">
                 <input type="radio" name="new_watch_id" value="{{ w.id }}"
                        {% if w.aktif %}checked{% endif %}
                        onchange="highlightNewWatch({{ w.id }})"
@@ -172,25 +184,18 @@
           </div>
 
         </div>
-
-        {# Sağ: Butonlar #}
         <div style="display:flex;gap:6px;flex-shrink:0">
-          <button type="button" onclick="hideInlineForm()" class="btn btn-secondary" style="padding:8px 14px">
-            İptal
-          </button>
-          <button type="button" onclick="saveInlinePilot()" class="btn btn-primary" style="padding:8px 16px">
-            Kaydet
-          </button>
+          <button type="button" onclick="hideInlineForm()" class="btn btn-secondary" style="padding:8px 14px">İptal</button>
+          <button type="button" onclick="saveInlinePilot()" class="btn btn-primary" style="padding:8px 16px">Kaydet</button>
         </div>
-
       </div>
       <div id="inline-error" style="display:none;padding:6px 16px 10px;color:#c0152a;font-size:13px"></div>
     </td>
   </tr>
 
-  {# ── + Pilot Ekle Butonu Satırı ── #}
+  {# ── + Pilot Ekle Butonu ── #}
   <tr id="add-btn-row">
-    <td colspan="5" style="padding:10px 14px">
+    <td colspan="6" style="padding:10px 14px">
       <button onclick="showInlineForm()" id="add-pilot-btn"
               style="background:none;border:1px dashed #B5D4F4;border-radius:8px;
                      padding:8px 18px;color:#185FA5;font-size:14px;font-weight:600;
@@ -204,8 +209,39 @@
 </table>
 </div>
 
+{# ── Silme Onay Modalı ── #}
+<div id="sil-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:12px;padding:28px 32px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18)">
+    <div style="font-size:18px;font-weight:700;margin-bottom:10px">Kaptanı Sil</div>
+    <div style="color:#555;margin-bottom:24px;line-height:1.5">
+      <span id="sil-isim" style="font-weight:700;color:#1a1a1a"></span> adlı kaptanı silmek istediğinizden emin misiniz?
+      <div style="margin-top:8px;font-size:13px;color:#c0152a">Bu işlem geri alınamaz.</div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="silIptal()" class="btn btn-secondary">İptal</button>
+      <form id="sil-form" method="POST" style="display:inline">
+        <button type="submit"
+                style="background:#c0152a;color:#fff;border:none;border-radius:8px;
+                       padding:8px 20px;font-size:15px;font-weight:600;cursor:pointer">
+          Evet, Sil
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── Watch Panel ──────────────────────────────────────────────
+function silOnay(id, isim) {
+  document.getElementById('sil-isim').textContent = isim;
+  document.getElementById('sil-form').action = '/pilots/' + id + '/sil';
+  document.getElementById('sil-modal').style.display = 'flex';
+}
+function silIptal() {
+  document.getElementById('sil-modal').style.display = 'none';
+}
+document.getElementById('sil-modal').addEventListener('click', function(e){
+  if (e.target === this) silIptal();
+});
 function openWatchPanel() {
   document.getElementById('watch-panel').style.display = 'block';
   window.scrollTo({top:0, behavior:'smooth'});
@@ -215,102 +251,52 @@ function closeWatchPanel() {
 }
 function selectWatch(id) {
   [1,2,3].forEach(function(i) {
-    var lbl  = document.getElementById('wlbl-' + i);
-    var txt  = document.getElementById('wlbl-text-' + i);
-    var akt  = document.getElementById('wlbl-aktif-' + i);
-    if (!lbl) return;
-    if (i === id) {
-      lbl.style.borderColor = '#185FA5';
-      lbl.style.background  = '#EEF5FF';
-      if (txt) { txt.style.color = '#185FA5'; }
-      if (akt) { akt.textContent = 'Aktif'; akt.style.background='#EAF3DE'; akt.style.color='#27500A'; }
-    } else {
-      lbl.style.borderColor = '#d8d8d8';
-      lbl.style.background  = '#fff';
-      if (txt) { txt.style.color = '#444'; }
-      if (akt) { akt.textContent = 'Pasif'; akt.style.background='#f0f0f0'; akt.style.color='#888'; }
-    }
+    var lbl=document.getElementById('wlbl-'+i), txt=document.getElementById('wlbl-text-'+i), akt=document.getElementById('wlbl-aktif-'+i);
+    if(!lbl) return;
+    if(i===id){ lbl.style.borderColor='#185FA5'; lbl.style.background='#EEF5FF'; if(txt) txt.style.color='#185FA5'; if(akt){akt.textContent='Aktif';akt.style.background='#EAF3DE';akt.style.color='#27500A';} }
+    else { lbl.style.borderColor='#d8d8d8'; lbl.style.background='#fff'; if(txt) txt.style.color='#444'; if(akt){akt.textContent='Pasif';akt.style.background='#f0f0f0';akt.style.color='#888';} }
   });
 }
-
-// ── Inline Form ──────────────────────────────────────────────
 function showInlineForm() {
-  document.getElementById('inline-form-row').style.display = 'table-row';
-  document.getElementById('add-btn-row').style.display = 'none';
+  document.getElementById('inline-form-row').style.display='table-row';
+  document.getElementById('add-btn-row').style.display='none';
   document.getElementById('new-ad-soyad').focus();
 }
 function hideInlineForm() {
-  document.getElementById('inline-form-row').style.display = 'none';
-  document.getElementById('add-btn-row').style.display = 'table-row';
-  document.getElementById('new-ad-soyad').value = '';
-  document.getElementById('new-telefon').value = '';
-  document.getElementById('inline-error').style.display = 'none';
+  document.getElementById('inline-form-row').style.display='none';
+  document.getElementById('add-btn-row').style.display='table-row';
+  document.getElementById('new-ad-soyad').value='';
+  document.getElementById('new-telefon').value='';
+  document.getElementById('inline-error').style.display='none';
 }
 function highlightNewWatch(id) {
   [1,2,3].forEach(function(i){
-    var lbl = document.getElementById('new-wlbl-' + i);
-    if (!lbl) return;
-    if (i === id) {
-      lbl.style.borderColor = '#185FA5';
-      lbl.style.background  = '#EEF5FF';
-      lbl.style.color       = '#185FA5';
-    } else {
-      lbl.style.borderColor = '#d8d8d8';
-      lbl.style.background  = '#fff';
-      lbl.style.color       = '#444';
-    }
+    var lbl=document.getElementById('new-wlbl-'+i);
+    if(!lbl) return;
+    if(i===id){lbl.style.borderColor='#185FA5';lbl.style.background='#EEF5FF';lbl.style.color='#185FA5';}
+    else{lbl.style.borderColor='#d8d8d8';lbl.style.background='#fff';lbl.style.color='#444';}
   });
 }
-
 function saveInlinePilot() {
-  var adSoyad  = document.getElementById('new-ad-soyad').value.trim();
-  var telefon  = document.getElementById('new-telefon').value.trim();
-  var watchEl  = document.querySelector('input[name="new_watch_id"]:checked');
-  var watchId  = watchEl ? watchEl.value : '';
-  var errDiv   = document.getElementById('inline-error');
-
-  if (!adSoyad) {
-    errDiv.textContent = 'Ad soyad boş olamaz.';
-    errDiv.style.display = 'block';
-    document.getElementById('new-ad-soyad').focus();
-    return;
-  }
-  errDiv.style.display = 'none';
-
-  var form = new FormData();
-  form.append('ad_soyad', adSoyad);
-  form.append('telefon', telefon);
-  form.append('watch_id', watchId);
-
-  fetch('/pilots/add-inline', { method: 'POST', body: form })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      if (data.ok) {
-        // Sayfayı yenile — yeni pilot sıralanmış gelsin
-        window.location.reload();
-      } else {
-        errDiv.textContent = data.hata || 'Hata oluştu.';
-        errDiv.style.display = 'block';
-      }
-    })
-    .catch(function(){
-      errDiv.textContent = 'Bağlantı hatası.';
-      errDiv.style.display = 'block';
-    });
+  var adSoyad=document.getElementById('new-ad-soyad').value.trim();
+  var telefon=document.getElementById('new-telefon').value.trim();
+  var watchEl=document.querySelector('input[name="new_watch_id"]:checked');
+  var watchId=watchEl?watchEl.value:'';
+  var errDiv=document.getElementById('inline-error');
+  if(!adSoyad){ errDiv.textContent='Ad soyad boş olamaz.'; errDiv.style.display='block'; document.getElementById('new-ad-soyad').focus(); return; }
+  errDiv.style.display='none';
+  var form=new FormData();
+  form.append('ad_soyad',adSoyad); form.append('telefon',telefon); form.append('watch_id',watchId);
+  fetch('/pilots/add-inline',{method:'POST',body:form})
+    .then(function(r){return r.json();})
+    .then(function(data){ if(data.ok){window.location.reload();}else{errDiv.textContent=data.hata||'Hata oluştu.';errDiv.style.display='block';} })
+    .catch(function(){errDiv.textContent='Bağlantı hatası.';errDiv.style.display='block';});
 }
-
-// Enter tuşu ile kaydet
-document.getElementById('new-ad-soyad').addEventListener('keydown', function(e){
-  if (e.key === 'Enter') saveInlinePilot();
-});
-document.getElementById('new-telefon').addEventListener('keydown', function(e){
-  if (e.key === 'Enter') saveInlinePilot();
-});
-
-// Watch seçim kutularını başlangıçta doğru renkle göster
-document.addEventListener('DOMContentLoaded', function(){
-  var checked = document.querySelector('input[name="new_watch_id"]:checked');
-  if (checked) highlightNewWatch(parseInt(checked.value));
+document.getElementById('new-ad-soyad').addEventListener('keydown',function(e){if(e.key==='Enter')saveInlinePilot();});
+document.getElementById('new-telefon').addEventListener('keydown',function(e){if(e.key==='Enter')saveInlinePilot();});
+document.addEventListener('DOMContentLoaded',function(){
+  var checked=document.querySelector('input[name="new_watch_id"]:checked');
+  if(checked) highlightNewWatch(parseInt(checked.value));
 });
 </script>
 
