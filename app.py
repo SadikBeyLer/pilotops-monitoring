@@ -53,6 +53,13 @@ def init_db():
         db.commit()
     except Exception:
         pass
+    # v1.2 — vessels yeni alanlar
+    for col in ["acenta TEXT", "tug_var INTEGER DEFAULT 0", "tug_adet INTEGER DEFAULT 0", "process TEXT"]:
+        try:
+            db.execute(f"ALTER TABLE vessels ADD COLUMN {col}")
+            db.commit()
+        except Exception:
+            pass
     db.close()
 
 SAMANDIRALAR = ['wimba','g.nato','k.nato','sa/sa','petgaz','b.aygaz','k.aygaz','milangaz']
@@ -325,8 +332,9 @@ def vessel_add():
             INSERT INTO vessels
             (imo_no,gemi_adi,tip,bayrak,grt,loa,
              thruster_bas,thruster_kic,tehlikeli_yuk,not_alani,
-             from_liman,to_liman,gelis_zamani,durum)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             from_liman,to_liman,gelis_zamani,durum,
+             acenta,tug_var,tug_adet,process)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             request.form.get('imo_no',''),
             request.form['gemi_adi'],
@@ -341,7 +349,11 @@ def vessel_add():
             request.form.get('from_liman',''),
             request.form.get('to_liman',''),
             request.form.get('gelis_zamani',''),
-            request.form.get('durum','yolda'),
+            request.form.get('durum','gelecek'),
+            request.form.get('acenta',''),
+            int(request.form.get('tug_var',0) or 0),
+            int(request.form.get('tug_adet',0) or 0),
+            request.form.get('process',''),
         ))
         db.commit()
         return redirect(url_for('vessels'))
