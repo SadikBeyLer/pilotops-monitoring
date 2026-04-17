@@ -151,9 +151,10 @@ def index():
 def pilots():
     db = get_db()
     pilots = db.execute(
-        "SELECT * FROM pilots WHERE aktif=1 ORDER BY ad_soyad"
+        "SELECT * FROM pilots WHERE aktif=1 ORDER BY watch_id, ad_soyad"
     ).fetchall()
-    return render_template('pilots.html', pilots=pilots)
+    watches = db.execute("SELECT * FROM watches ORDER BY id").fetchall()
+    return render_template('pilots.html', pilots=pilots, watches=watches)
 
 @app.route('/pilots/add', methods=['GET','POST'])
 def pilot_add():
