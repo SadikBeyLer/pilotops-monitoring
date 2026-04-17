@@ -5,3 +5,5 @@ pypdf
 python-dotenv
 requests
 twilio
+google-api-python-client
+google-auth
