@@ -87,7 +87,7 @@
       </select>
     </div>
   </div>
-  <div id="tip-box" style="display:none;padding:10px 14px;border-radius:8px;border:1px solid #e0e0e0;background:#fff;margin-top:4px;display:flex;align-items:center;gap:12px">
+  <div id="tip-box" style="display:none;padding:10px 14px;border-radius:8px;border:1px solid #e0e0e0;background:#fff;margin-top:4px;align-items:center;gap:12px">
     <span style="font-size:12px;color:#888">Tespit edilen iş tipi:</span>
     <span id="tip-badge" style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600">—</span>
     <span id="tip-k" style="font-size:12px;color:#888"></span>
@@ -157,23 +157,18 @@
 
 <script>
 var SAMANDIRALAR = {{ samandiralar | tojson }};
-// Sayfa açılınca 4 saat alanını şu anki zaman ile doldur
-(function setNow(){
+var currentFatigue = 0;
+var currentK = 1.0;
+
+document.addEventListener('DOMContentLoaded', function(){
   var now = new Date();
   var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
-  var str = now.getFullYear() + '-' +
-            pad(now.getMonth() + 1) + '-' +
-            pad(now.getDate()) + 'T' +
-            pad(now.getHours()) + ':' +
-            pad(now.getMinutes());
+  var str = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
   document.getElementById('t-off').value  = str;
   document.getElementById('t-pob').value  = str;
   document.getElementById('t-poff').value = str;
   document.getElementById('t-on').value   = str;
-  
-})();
-var currentFatigue = 0;
-var currentK = 1.0;
+});
 
 function isSam(s){ return SAMANDIRALAR.some(function(sam){ return s.toLowerCase().includes(sam); }); }
 
@@ -235,17 +230,13 @@ function fmtMs(ms){
 function updateFatigue(){
   var off=dt('t-off'),pob=dt('t-pob'),poff=dt('t-poff'),on=dt('t-on');
   if(!off||!pob||!poff||!on)return;
-  function updateFatigue(){
-  var off=dt('t-off'),pob=dt('t-pob'),poff=dt('t-poff'),on=dt('t-on');
-  if(!off||!pob||!poff||!on)return;
   var gemiH=(poff-pob)/3600000;
-  if(gemiH <= 0){ 
+  if(gemiH<=0){
     document.getElementById('f-katki').textContent='—';
     document.getElementById('f-sonraki').textContent='—';
     return;
   }
   var transH=((pob-off)+(on-poff))/3600000;
-  var gemiH=(poff-pob)/3600000;
   var katki=Math.round((currentK*gemiH+0.5*transH)*8);
   var sonraki=currentFatigue+katki;
   document.getElementById('f-katki').textContent='+'+katki;
