@@ -167,6 +167,29 @@ def index():
             ORDER BY son_fatigue_norm DESC
         """, (watch['id'], watch['id'], watch['id'])).fetchall()
 
+    # Dinlenme sonrası fatigue güncelle
+        now = datetime.utcnow()
+        pilots_list = []
+        for p in pilots_raw:
+            p = dict(p)
+            last_op = db.execute(
+                "SELECT on_station, fatigue_toplam FROM operations WHERE pilot_id=? ORDER BY olusturma DESC LIMIT 1",
+                (p['pilot_id'],)
+            ).fetchone()
+            if last_op and last_op['on_station']:
+                try:
+                    last_time = datetime.fromisoformat(last_op['on_station'])
+                    rest_h = (now - last_time).total_seconds() / 3600
+                    if rest_h > 0:
+                        recovered = apply_recovery(last_op['fatigue_toplam'], rest_h)
+                        p['son_fatigue_norm'] = normalize_score(recovered)
+                        from fatigue_engine import fatigue_color
+                        _, p['fatigue_durum'] = fatigue_color(recovered)
+                except:
+                    pass
+            pilots_list.append(p)
+        pilots_raw = sorted(pilots_list, key=lambda x: x['son_fatigue_norm'], reverse=True)    
+
         # Her pilot için iş listesini çek (accordion için)
         pilot_jobs = {}
         for p in pilots_raw:
