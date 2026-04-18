@@ -235,6 +235,15 @@ function fmtMs(ms){
 function updateFatigue(){
   var off=dt('t-off'),pob=dt('t-pob'),poff=dt('t-poff'),on=dt('t-on');
   if(!off||!pob||!poff||!on)return;
+  function updateFatigue(){
+  var off=dt('t-off'),pob=dt('t-pob'),poff=dt('t-poff'),on=dt('t-on');
+  if(!off||!pob||!poff||!on)return;
+  var gemiH=(poff-pob)/3600000;
+  if(gemiH <= 0){ 
+    document.getElementById('f-katki').textContent='—';
+    document.getElementById('f-sonraki').textContent='—';
+    return;
+  }
   var transH=((pob-off)+(on-poff))/3600000;
   var gemiH=(poff-pob)/3600000;
   var katki=Math.round((currentK*gemiH+0.5*transH)*8);

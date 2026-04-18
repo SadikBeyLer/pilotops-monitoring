@@ -131,9 +131,14 @@
       </div>
       <div class="form-group">
         <label>ETA</label>
-        <input type="datetime-local" name="gelis_zamani" id="eta-input">
+        <input type="datetime-local" name="gelis_zamani" id="eta-input" oninput="etaKontrol()">
       </div>
     </div>
+    <div class="form-group">
+        <label>ETA</label>
+        <input type="datetime-local" name="gelis_zamani" id="eta-input" oninput="etaKontrol()">
+        <div id="eta-uyari" style="display:none;margin-top:6px;padding:7px 10px;border-radius:6px;background:#FFF3E0;color:#7A4800;font-size:12px;font-weight:600"></div>
+      </div>
     <div class="grid3" style="margin-top:4px">
       <div class="form-group">
         <label>Durum</label>
@@ -189,4 +194,22 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+function etaKontrol(){
+  var eta = document.getElementById('eta-input');
+  var uyari = document.getElementById('eta-uyari');
+  if(!eta.value){ uyari.style.display='none'; return; }
+  var secilen = new Date(eta.value);
+  var now = new Date();
+  var minDate = new Date(now.getTime() - 1*24*60*60*1000);  // 1 gün önce
+  var maxDate = new Date(now.getTime() + 15*24*60*60*1000); // 15 gün sonra
+  if(secilen < minDate){
+    uyari.textContent = '⚠️ ETA çok geride — en fazla 1 gün öncesi girilebilir.';
+    uyari.style.display = 'block';
+  } else if(secilen > maxDate){
+    uyari.textContent = '⚠️ ETA çok ilerde — en fazla 15 gün sonrası girilebilir.';
+    uyari.style.display = 'block';
+  } else {
+    uyari.style.display = 'none';
+  }
+}
 {% endblock %}
