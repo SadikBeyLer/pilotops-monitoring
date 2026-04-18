@@ -351,6 +351,12 @@ def vessels():
 def vessel_add():
     if request.method == 'POST':
         db = get_db()
+        imo = request.form.get('imo_no', '').strip()
+        if not imo:
+            return render_template('vessel_add.html', hata='IMO numarası boş bırakılamaz.')
+        mevcut = db.execute("SELECT id FROM vessels WHERE imo_no=?", (imo,)).fetchone()
+        if mevcut:
+            return render_template('vessel_add.html', hata='Bu IMO numarası zaten kayıtlı.')
         db.execute("""
             INSERT INTO vessels
             (imo_no,gemi_adi,tip,bayrak,grt,loa,
@@ -392,10 +398,18 @@ def vessel_durum(vessel_id):
     db.commit()
     return jsonify({'ok': True, 'durum': durum})
 
-# ── İş Girişi ────────────────────────────────────────────────
+# ── İş Girişi ────────────────────────────────────────────────# ── İş Girişi ────────────────────────────────────────────────
 @app.route('/operations/add', methods=['GET','POST'])
 def operation_add():
     db = get_db()
+    pilots  = db.execute("""
+        SELECT p.* FROM pilots p
+        JOIN watches w ON w.id = p.watch_id
+        WHERE p.aktif=1 AND w.aktif=1
+        ORDER BY p.ad_soyad
+    """).fetchall()
+    vessels = db.execute("SELECT * FROM vessels WHERE durum='manevrada' ORDER BY gemi_adi").fetchall()
+
     if request.method == 'POST':
         pilot_id   = int(request.form['pilot_id'])
         vessel_id  = int(request.form['vessel_id'])
@@ -407,6 +421,21 @@ def operation_add():
         on_st      = request.form['on_station']
         draft_bas  = float(request.form.get('draft_bas',0) or 0)
         draft_kic  = float(request.form.get('draft_kic',0) or 0)
+
+        # Tarih sınırı kontrolü — 1 gün öncesi / 1 gün sonrası
+        now = datetime.utcnow()
+        min_dt = datetime(now.year, now.month, now.day) - __import__('datetime').timedelta(days=1)
+        max_dt = datetime(now.year, now.month, now.day) + __import__('datetime').timedelta(days=1)
+        for dt_str in [off_st, pob, poff, on_st]:
+            try:
+                dt_val = datetime.fromisoformat(dt_str)
+                if dt_val < min_dt or dt_val > max_dt:
+                    return render_template('operation_add.html', pilots=pilots, vessels=vessels,
+                                           samandiralar=SAMANDIRALAR,
+                                           hata='Geçersiz tarih — en fazla 1 gün öncesi veya 1 gün sonrası girilebilir.')
+            except Exception:
+                pass
+
         is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
         watch = db.execute(
             "SELECT id FROM watches WHERE aktif=1 ORDER BY baslangic DESC LIMIT 1"
@@ -453,14 +482,8 @@ def operation_add():
         ))
         db.commit()
         return redirect(url_for('index'))
-    pilots  = db.execute("""
-        SELECT p.* FROM pilots p
-        JOIN watches w ON w.id = p.watch_id
-        WHERE p.aktif=1 AND w.aktif=1
-        ORDER BY p.ad_soyad
-    """).fetchall()
-    vessels = db.execute("SELECT * FROM vessels WHERE durum='manevrada' ORDER BY gemi_adi").fetchall()
-    return render_template('operation_add.html',pilots=pilots,vessels=vessels,
+
+    return render_template('operation_add.html', pilots=pilots, vessels=vessels,
                            samandiralar=SAMANDIRALAR)
 
 # ── API: Kaptan fatigue ───────────────────────────────────────

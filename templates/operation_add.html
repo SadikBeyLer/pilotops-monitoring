@@ -6,6 +6,9 @@
   <a href="/" class="btn btn-secondary">← Geri</a>
 </div>
 <form method="POST" id="op-form">
+  {% if hata %}
+<div style="margin-bottom:16px;padding:10px 14px;border-radius:8px;background:#FCEBEB;color:#791F1F;font-size:13px;font-weight:600">⚠️ {{ hata }}</div>
+{% endif %}
 
 <div class="section">
   <div class="section-title">Kaptan & Gemi</div>
