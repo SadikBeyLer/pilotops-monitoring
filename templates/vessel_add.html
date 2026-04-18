@@ -7,6 +7,9 @@
 </div>
 
 <form method="POST" style="max-width:720px;margin:0 auto">
+  {% if hata %}
+<div style="margin-bottom:16px;padding:10px 14px;border-radius:8px;background:#FCEBEB;color:#791F1F;font-size:13px;font-weight:600">⚠️ {{ hata }}</div>
+{% endif %}
 
   {# ── Kimlik ── #}
   <div class="section">
@@ -194,14 +197,29 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
+<script>
+// ETA — bugünün tarihi default
+document.addEventListener('DOMContentLoaded', function() {
+  var eta = document.getElementById('eta-input');
+  if (eta && !eta.value) {
+    var now = new Date();
+    var y = now.getFullYear();
+    var m = String(now.getMonth()+1).padStart(2,'0');
+    var d = String(now.getDate()).padStart(2,'0');
+    var h = String(now.getHours()).padStart(2,'0');
+    var min = String(now.getMinutes()).padStart(2,'0');
+    eta.value = y+'-'+m+'-'+d+'T'+h+':'+min;
+  }
+});
+
 function etaKontrol(){
   var eta = document.getElementById('eta-input');
   var uyari = document.getElementById('eta-uyari');
   if(!eta.value){ uyari.style.display='none'; return; }
   var secilen = new Date(eta.value);
   var now = new Date();
-  var minDate = new Date(now.getTime() - 1*24*60*60*1000);  // 1 gün önce
-  var maxDate = new Date(now.getTime() + 15*24*60*60*1000); // 15 gün sonra
+  var minDate = new Date(now.getTime() - 1*24*60*60*1000);
+  var maxDate = new Date(now.getTime() + 15*24*60*60*1000);
   if(secilen < minDate){
     uyari.textContent = '⚠️ ETA çok geride — en fazla 1 gün öncesi girilebilir.';
     uyari.style.display = 'block';
@@ -212,4 +230,5 @@ function etaKontrol(){
     uyari.style.display = 'none';
   }
 }
+</script>
 {% endblock %}
