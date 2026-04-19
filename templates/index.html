@@ -21,7 +21,7 @@
       <th style="padding:12px 14px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Pilot</th>
       <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Jobs</th>
       <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Working Hrs</th>
-      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">R/12</th>
+      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">R/H</th>
       <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Fatigue</th>
       <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">MLC</th>
       <th style="padding:12px 14px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Active Vessel</th>
@@ -33,7 +33,7 @@
   {% set norm  = p.son_fatigue_norm or 0 %}
   {% set durum = p.fatigue_durum or 'FIT' %}
   {% set wh    = p.calisma_saati or 0 %}
-  {% set r12   = 12 - wh %}
+  {% set r12 = p.rest_hours or '—' %}
   {% set wh24  = p.calisma_24h or 0 %}
   {% set jobs  = pilot_jobs.get(p.pilot_id, []) %}
 
@@ -72,9 +72,11 @@
 
     <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
     <td style="padding:11px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
-    <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:600;
-               color:{% if r12 < 2 %}#c0152a{% elif r12 < 4 %}#b85c00{% else %}#555{% endif %}">
-      {{ '%.2f'|format(r12) }}
+    <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
+    <td style="padding:11px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
+    <td style="padding:11px 14px;text-align:center;font-size:14px;font-weight:600;color:#555">
+      {{ r12 }}
+    </td>
     </td>
 
     <td style="padding:11px 14px;text-align:center;min-width:100px">
