@@ -404,7 +404,7 @@ def vessel_add():
             request.form.get('process',''),
         ))
         db.commit()
-        return redirect(url_for('vessels'))
+        return redirect(url_for('vessels') + '?seg=' + request.form.get('durum', 'gelecek'))
     return render_template('vessel_add.html')
 
 @app.route('/vessels/<int:vessel_id>/edit', methods=['GET','POST'])
