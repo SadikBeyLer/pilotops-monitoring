@@ -20,8 +20,6 @@
 
 {# ── Sticky wrapper ── #}
 <div id="sticky-top" style="position:sticky;top:0;z-index:100;background:#f5f7fa;padding-bottom:8px">
-
-  {# Segment butonlar #}
   <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
     <div style="display:flex;gap:6px">
       {% for key, label in [('gelecek','🕐 Gelecek'),('demirde','⚓ Demirde'),('irtibatta','📡 İrtibatta'),('manevrada','🚢 Manevrada')] %}
@@ -64,15 +62,13 @@
     </div>
   </div>
 
-  {# Segment başlığı + aksiyon butonu — JS ile doldurulur #}
-  <div id="seg-header" style="display:none;display:flex;align-items:center;gap:10px;padding:6px 2px">
+  <div id="seg-header" style="display:none;align-items:center;gap:10px;padding:4px 2px">
     <span id="seg-header-label" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#185FA5"></span>
     <span id="seg-header-count" style="font-size:11px;color:#aaa;font-weight:600"></span>
     <a href="/operations/add" id="seg-is-ekle"
        style="display:none;padding:4px 12px;border-radius:6px;background:#185FA5;color:#fff;font-size:12px;font-weight:700;text-decoration:none;margin-left:4px">+ İş ekle</a>
   </div>
-
-</div>{# /sticky-top #}
+</div>
 
 {# ── Arama Sonucu ── #}
 <div id="search-result" style="display:none;margin-bottom:16px">
@@ -91,26 +87,24 @@
     <table style="width:100%;border-collapse:collapse">
       <thead>
         <tr style="background:#F4F7FB;border-bottom:2px solid #dde8f5">
-          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;min-width:130px">Gemi Adı</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:75px">IMO</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:90px">Draft</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888">Fr → To</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:70px">GT</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:55px">LOA</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:80px">Acenta</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:45px">Tip</th>
-          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:35px">BT</th>
-          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:35px">Tug</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:70px">Process</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;width:90px">ETA</th>
-          <th style="padding:8px 8px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888">Not</th>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle">Gemi / Not</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:75px">IMO</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:85px">Draft</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle">Fr → To</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:70px">GT</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:55px">LOA</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:80px">Acenta</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:45px">Tip</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:32px">BT</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:32px">Tug</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:70px">Process</th>
+          <th style="padding:8px 8px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888;vertical-align:middle;width:100px">ETA</th>
           <th style="padding:8px 8px;width:110px"></th>
         </tr>
       </thead>
       <tbody>
       {% for v in seg_vessels %}
 
-      {# ETA format #}
       {% if v.gelis_zamani and v.gelis_zamani|length >= 16 %}
         {% set e = v.gelis_zamani %}
         {% set eta_fmt = e[8:10] ~ '.' ~ e[5:7] ~ '.' ~ e[2:4] ~ ' / ' ~ e[11:16] %}
@@ -118,7 +112,6 @@
         {% set eta_fmt = '—' %}
       {% endif %}
 
-      {# Draft #}
       {% if v.draft_bas or v.draft_kic %}
         {% set draft_fmt = (v.draft_bas|string if v.draft_bas else '—') ~ '/' ~ (v.draft_kic|string if v.draft_kic else '—') %}
       {% else %}
@@ -126,31 +119,35 @@
       {% endif %}
 
       <tr style="border-bottom:1px solid #f0f0f0" data-gemi="{{ v.gemi_adi|lower }}">
-        <td style="padding:9px 12px;font-weight:700;font-size:13px;color:#1a1a1a">
-          {{ v.gemi_adi }}
-          {% if v.tehlikeli_yuk %}<span style="font-size:10px;color:#c0152a;margin-left:3px">⚠️</span>{% endif %}
+        <td style="padding:9px 12px;vertical-align:middle">
+          <div style="font-weight:700;font-size:13px;color:#1a1a1a;line-height:1.3">
+            {{ v.gemi_adi }}
+            {% if v.tehlikeli_yuk %}<span style="font-size:10px;color:#c0152a;margin-left:3px">⚠️</span>{% endif %}
+          </div>
+          {% if v.not_alani %}
+          <div style="font-size:11px;color:#aaa;margin-top:2px">📝 {{ v.not_alani }}</div>
+          {% endif %}
         </td>
-        <td style="padding:9px 8px;font-size:12px;color:#666">{{ v.imo_no or '—' }}</td>
-        <td style="padding:9px 8px;font-size:12px;color:#666">{{ draft_fmt }}</td>
-        <td style="padding:9px 8px;font-size:12px;color:#333">
+        <td style="padding:9px 8px;font-size:12px;color:#666;text-align:center;vertical-align:middle">{{ v.imo_no or '—' }}</td>
+        <td style="padding:9px 8px;font-size:12px;color:#666;text-align:center;vertical-align:middle">{{ draft_fmt }}</td>
+        <td style="padding:9px 8px;font-size:12px;color:#333;text-align:center;vertical-align:middle">
           {% if v.from_liman or v.to_liman %}{{ v.from_liman or '—' }} → {{ v.to_liman or '—' }}{% else %}—{% endif %}
         </td>
-        <td style="padding:9px 8px;font-size:12px;color:#333">{% if v.grt %}{{ '{:,.0f}'.format(v.grt) }}{% else %}—{% endif %}</td>
-        <td style="padding:9px 8px;font-size:12px;color:#333">{% if v.loa %}{{ v.loa|int }}m{% else %}—{% endif %}</td>
-        <td style="padding:9px 8px;font-size:12px;color:#555">{{ v.acenta or '—' }}</td>
-        <td style="padding:9px 8px;font-size:12px;color:#333">{{ v.tip or '—' }}</td>
-        <td style="padding:9px 8px;text-align:center;font-size:12px;font-weight:700">
+        <td style="padding:9px 8px;font-size:12px;color:#333;text-align:center;vertical-align:middle">{% if v.grt %}{{ '{:,.0f}'.format(v.grt) }}{% else %}—{% endif %}</td>
+        <td style="padding:9px 8px;font-size:12px;color:#333;text-align:center;vertical-align:middle">{% if v.loa %}{{ v.loa|int }}m{% else %}—{% endif %}</td>
+        <td style="padding:9px 8px;font-size:12px;color:#555;text-align:center;vertical-align:middle">{{ v.acenta or '—' }}</td>
+        <td style="padding:9px 8px;font-size:12px;color:#333;text-align:center;vertical-align:middle">{{ v.tip or '—' }}</td>
+        <td style="padding:9px 8px;text-align:center;vertical-align:middle;font-size:12px;font-weight:700">
           {% if v.thruster_bas > 0 or v.thruster_kic > 0 %}<span style="color:#1a7a2e">Y</span>
           {% else %}<span style="color:#ccc">N</span>{% endif %}
         </td>
-        <td style="padding:9px 8px;text-align:center;font-size:12px;font-weight:700">
+        <td style="padding:9px 8px;text-align:center;vertical-align:middle;font-size:12px;font-weight:700">
           {% if v.tug_var and v.tug_var|int == 1 %}<span style="color:#1a7a2e">Y</span>
           {% else %}<span style="color:#ccc">N</span>{% endif %}
         </td>
-        <td style="padding:9px 8px;font-size:12px;color:#555">{{ v.process or '—' }}</td>
-        <td style="padding:9px 8px;font-size:12px;color:#333;white-space:nowrap">{{ eta_fmt }}</td>
-        <td style="padding:9px 8px;font-size:12px;color:#999;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ v.not_alani or '—' }}</td>
-        <td style="padding:9px 8px;text-align:right;white-space:nowrap">
+        <td style="padding:9px 8px;font-size:12px;color:#555;text-align:center;vertical-align:middle">{{ v.process or '—' }}</td>
+        <td style="padding:9px 8px;font-size:12px;color:#333;text-align:center;vertical-align:middle;white-space:nowrap">{{ eta_fmt }}</td>
+        <td style="padding:9px 8px;text-align:right;white-space:nowrap;vertical-align:middle">
           <a href="/vessels/{{ v.id }}/edit"
              style="padding:4px 10px;border-radius:6px;border:1.5px solid #888;
                     background:#fff;color:#555;font-size:11px;font-weight:700;
@@ -201,9 +198,7 @@ var SEGMENT_LABELS = {
   'k_samandira':'🔺 KUZEY ŞAM.','g_samandira':'▲ GÜNEY ŞAM.',
   'toros':'🏭 TOROS','irtibatta':'📡 İRTİBATTA','manevrada':'🚢 MANEVRADA'
 };
-var SEGMENT_COLORS = {
-  'irtibatta':'#27500A','manevrada':'#0C447C'
-};
+var SEGMENT_COLORS = {'irtibatta':'#27500A','manevrada':'#0C447C'};
 
 function toggleSegment(key) {
   var el  = document.getElementById('seg-' + key);
@@ -213,7 +208,7 @@ function toggleSegment(key) {
   SEGMENT_KEYS.forEach(function(k) {
     document.getElementById('seg-' + k).style.display = 'none';
     var b = document.getElementById('btn-' + k);
-    b.style.background = '#fff'; b.style.color = '#555'; b.style.borderColor = '#dde8f5';
+    b.style.background='#fff'; b.style.color='#555'; b.style.borderColor='#dde8f5';
     var badge = document.getElementById('badge-' + k);
     if (badge) badge.style.background = '#185FA5';
   });
@@ -231,23 +226,13 @@ function toggleSegment(key) {
     var badge = document.getElementById('badge-' + key);
     if (badge) badge.style.background = 'rgba(255,255,255,0.3)';
 
-    // Sticky başlık güncelle
-    var count = el.querySelectorAll('tbody tr').length;
-    var headerLabel = document.getElementById('seg-header-label');
-    var headerCount = document.getElementById('seg-header-count');
-    headerLabel.textContent = SEGMENT_LABELS[key] || key.toUpperCase();
-    headerLabel.style.color = SEGMENT_COLORS[key] || '#185FA5';
-    headerCount.textContent = Math.round(count / 1) + ' gemi'; // her gemi 1 satır
+    var rows = el.querySelectorAll('tbody tr').length;
+    document.getElementById('seg-header-label').textContent = SEGMENT_LABELS[key] || key.toUpperCase();
+    document.getElementById('seg-header-label').style.color = SEGMENT_COLORS[key] || '#185FA5';
+    document.getElementById('seg-header-count').textContent = rows + ' gemi';
     segHeader.style.display = 'flex';
 
-    // + Gemi ekle
-    if (GEMI_EKLE_SEGMENTS.indexOf(key) !== -1) {
-      gemiEkleBtn.style.display = 'inline-flex';
-    } else {
-      gemiEkleBtn.style.display = 'none';
-    }
-
-    // + İş ekle (sadece manevrada)
+    gemiEkleBtn.style.display = GEMI_EKLE_SEGMENTS.indexOf(key) !== -1 ? 'inline-flex' : 'none';
     segIsEkle.style.display = (key === 'manevrada') ? 'inline-block' : 'none';
 
     setTimeout(function() { el.scrollIntoView({behavior:'smooth', block:'start'}); }, 50);
@@ -260,22 +245,17 @@ function toggleSegment(key) {
 
 var allVessels = [
   {% for v in vessels %}
-  {
-    id: {{ v.id }},
-    ad: "{{ v.gemi_adi }}",
-    durum: "{{ v.durum }}",
-    imo: "{{ v.imo_no or '—' }}",
-    loa: "{% if v.loa %}{{ v.loa|int }}m{% else %}—{% endif %}",
-    grt: "{% if v.grt %}{{ '{:,.0f}'.format(v.grt) }}{% else %}—{% endif %}",
-    tip: "{{ v.tip or '—' }}",
-    bt: {% if v.thruster_bas > 0 or v.thruster_kic > 0 %}true{% else %}false{% endif %},
-    tug: {% if v.tug_var and v.tug_var|int == 1 %}true{% else %}false{% endif %},
-    fr: "{{ v.from_liman or '' }}",
-    to: "{{ v.to_liman or '' }}",
-    eta: "{{ v.gelis_zamani[:16] if v.gelis_zamani else '—' }}",
-    acenta: "{{ v.acenta or '—' }}",
-    process: "{{ v.process or '—' }}",
-    not_: "{{ v.not_alani or '' }}"
+  {id:{{ v.id }},ad:"{{ v.gemi_adi }}",durum:"{{ v.durum }}",
+   imo:"{{ v.imo_no or '—' }}",
+   loa:"{% if v.loa %}{{ v.loa|int }}m{% else %}—{% endif %}",
+   grt:"{% if v.grt %}{{ '{:,.0f}'.format(v.grt) }}{% else %}—{% endif %}",
+   tip:"{{ v.tip or '—' }}",
+   bt:{% if v.thruster_bas > 0 or v.thruster_kic > 0 %}true{% else %}false{% endif %},
+   tug:{% if v.tug_var and v.tug_var|int == 1 %}true{% else %}false{% endif %},
+   fr:"{{ v.from_liman or '' }}",to_:"{{ v.to_liman or '' }}",
+   eta:"{{ v.gelis_zamani[:16] if v.gelis_zamani else '—' }}",
+   acenta:"{{ v.acenta or '—' }}",process:"{{ v.process or '—' }}",
+   not_:"{{ v.not_alani or '' }}"
   }{% if not loop.last %},{% endif %}
   {% endfor %}
 ];
@@ -304,30 +284,28 @@ function searchVessel(q) {
   });
   document.getElementById('btn-gemi-ekle').style.display = 'none';
   document.getElementById('seg-header').style.display = 'none';
-  document.getElementById('seg-is-ekle').style.display = 'none';
 
   var found = allVessels.filter(function(v) { return v.ad.toLowerCase().includes(q.toLowerCase()); });
   if (found.length === 0) {
     resultBody.innerHTML = '<div style="padding:24px;text-align:center;color:#aaa;font-size:13px">Gemi bulunamadı</div>';
   } else {
-    var html = '<table style="width:100%;border-collapse:collapse">';
-    html += '<thead><tr style="background:#F4F7FB;border-bottom:2px solid #dde8f5">';
-    ['Gemi Adı','Durum','IMO','Fr → To','GT','LOA','Acenta','Tip','BT','ETA'].forEach(function(h){
-      html += '<th style="padding:8px 10px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;color:#888">'+h+'</th>';
+    var html = '<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#F4F7FB;border-bottom:2px solid #dde8f5">';
+    ['Gemi / Not','Durum','IMO','Fr → To','GT','LOA','Acenta','Tip','BT','ETA'].forEach(function(h){
+      html += '<th style="padding:8px 10px;text-align:center;font-size:11px;font-weight:800;text-transform:uppercase;color:#888">'+h+'</th>';
     });
     html += '</tr></thead><tbody>';
     found.forEach(function(v) {
       html += '<tr style="border-bottom:1px solid #f0f0f0">';
-      html += '<td style="padding:9px 10px;font-weight:700;font-size:13px;color:#1a1a1a">'+v.ad+'</td>';
-      html += '<td style="padding:9px 10px;font-size:12px;color:#555">'+(durumLabels[v.durum]||v.durum)+'</td>';
-      html += '<td style="padding:9px 10px;font-size:12px;color:#666">'+v.imo+'</td>';
-      html += '<td style="padding:9px 10px;font-size:12px;color:#333">'+(v.fr||v.to?(v.fr||'—')+' → '+(v.to||'—'):'—')+'</td>';
-      html += '<td style="padding:9px 10px;font-size:12px;color:#333">'+v.grt+'</td>';
-      html += '<td style="padding:9px 10px;font-size:12px;color:#333">'+v.loa+'</td>';
-      html += '<td style="padding:9px 10px;font-size:12px;color:#555">'+v.acenta+'</td>';
-      html += '<td style="padding:9px 10px;font-size:12px;color:#333">'+v.tip+'</td>';
+      html += '<td style="padding:9px 10px;vertical-align:middle"><div style="font-weight:700;font-size:13px;color:#1a1a1a">'+v.ad+'</div>'+(v.not_?'<div style="font-size:11px;color:#aaa;margin-top:2px">📝 '+v.not_+'</div>':'')+'</td>';
+      html += '<td style="padding:9px 10px;font-size:12px;color:#555;text-align:center">'+(durumLabels[v.durum]||v.durum)+'</td>';
+      html += '<td style="padding:9px 10px;font-size:12px;color:#666;text-align:center">'+v.imo+'</td>';
+      html += '<td style="padding:9px 10px;font-size:12px;color:#333;text-align:center">'+(v.fr||v.to_?(v.fr||'—')+' → '+(v.to_||'—'):'—')+'</td>';
+      html += '<td style="padding:9px 10px;font-size:12px;color:#333;text-align:center">'+v.grt+'</td>';
+      html += '<td style="padding:9px 10px;font-size:12px;color:#333;text-align:center">'+v.loa+'</td>';
+      html += '<td style="padding:9px 10px;font-size:12px;color:#555;text-align:center">'+v.acenta+'</td>';
+      html += '<td style="padding:9px 10px;font-size:12px;color:#333;text-align:center">'+v.tip+'</td>';
       html += '<td style="padding:9px 10px;font-size:12px;font-weight:700;text-align:center">'+(v.bt?'<span style="color:#1a7a2e">Y</span>':'<span style="color:#ccc">N</span>')+'</td>';
-      html += '<td style="padding:9px 10px;font-size:12px;color:#333;white-space:nowrap">'+fmtEta(v.eta)+'</td>';
+      html += '<td style="padding:9px 10px;font-size:12px;color:#333;text-align:center;white-space:nowrap">'+fmtEta(v.eta)+'</td>';
       html += '</tr>';
     });
     html += '</tbody></table>';

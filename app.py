@@ -397,6 +397,48 @@ def vessel_add():
         return redirect(url_for('vessels'))
     return render_template('vessel_add.html')
 
+@app.route('/vessels/<int:vessel_id>/edit', methods=['GET','POST'])
+def vessel_edit(vessel_id):
+    db = get_db()
+    vessel = db.execute("SELECT * FROM vessels WHERE id=?", (vessel_id,)).fetchone()
+    if not vessel:
+        return redirect(url_for('vessels'))
+    if request.method == 'POST':
+        db.execute("""
+            UPDATE vessels SET
+            imo_no=?, gemi_adi=?, tip=?, bayrak=?, grt=?, loa=?,
+            thruster_bas=?, thruster_kic=?, tehlikeli_yuk=?, not_alani=?,
+            from_liman=?, to_liman=?, gelis_zamani=?, durum=?,
+            acenta=?, tug_var=?, tug_adet=?, process=?,
+            draft_bas=?, draft_kic=?
+            WHERE id=?
+        """, (
+            request.form.get('imo_no',''),
+            request.form['gemi_adi'],
+            request.form.get('tip',''),
+            request.form.get('bayrak',''),
+            float(request.form.get('grt',0) or 0),
+            float(request.form.get('loa',0) or 0),
+            int(request.form.get('thruster_bas',0) or 0),
+            int(request.form.get('thruster_kic',0) or 0),
+            1 if request.form.get('tehlikeli_yuk') else 0,
+            request.form.get('not_alani',''),
+            request.form.get('from_liman',''),
+            request.form.get('to_liman',''),
+            request.form.get('gelis_zamani',''),
+            request.form.get('durum','gelecek'),
+            request.form.get('acenta',''),
+            int(request.form.get('tug_var',0) or 0),
+            int(request.form.get('tug_adet',0) or 0),
+            request.form.get('process',''),
+            float(request.form.get('draft_bas',0) or 0),
+            float(request.form.get('draft_kic',0) or 0),
+            vessel_id
+        ))
+        db.commit()
+        return redirect(url_for('vessels'))
+    return render_template('vessel_edit.html', vessel=vessel)
+
 
 # ── Gemi Durum Güncelle ──────────────────────────────────────
 @app.route('/vessels/<int:vessel_id>/durum', methods=['POST'])
