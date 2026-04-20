@@ -4,7 +4,7 @@
 
 <div class="page-header" style="margin-bottom:24px">
   <div class="page-title">Gemiler</div>
-  <a href="/vessels/add" class="btn btn-primary">+ Gemi ekle</a>
+  <a href="/vessels/add" id="btn-gemi-ekle" class="btn btn-primary" style="display:none">+ Gemi ekle</a>
 </div>
 
 {% set all_segments = [
@@ -102,11 +102,20 @@
 {% for key, label in all_segments %}
 {% set seg_vessels = vessels | selectattr('durum','equalto', key) | list %}
 <div id="seg-{{ key }}" style="display:none;margin-bottom:20px">
-  <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;
-              color:{% if key == 'irtibatta' %}#27500A{% elif key == 'manevrada' %}#0C447C{% else %}#185FA5{% endif %};
-              margin-bottom:8px;padding-left:2px">
-    {{ label | safe }}
-    <span style="font-size:11px;font-weight:600;color:#aaa;margin-left:4px;text-transform:none">{{ seg_vessels|length }} gemi</span>
+
+  {# Başlık satırı #}
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;
+                color:{% if key == 'irtibatta' %}#27500A{% elif key == 'manevrada' %}#0C447C{% else %}#185FA5{% endif %};
+                padding-left:2px">
+      {{ label | safe }}
+      <span style="font-size:11px;font-weight:600;color:#aaa;margin-left:4px;text-transform:none">{{ seg_vessels|length }} gemi</span>
+    </div>
+    {% if key == 'manevrada' %}
+    <a href="/operations/add"
+       style="padding:6px 14px;border-radius:6px;background:#185FA5;color:#fff;
+              font-size:12px;font-weight:700;text-decoration:none">+ İş ekle</a>
+    {% endif %}
   </div>
 
   {% if seg_vessels %}
@@ -122,7 +131,7 @@
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888">Fr → To</th>
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888;width:130px">ETA</th>
           <th style="padding:9px 14px;text-align:left;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#888">Not</th>
-          <th style="padding:9px 14px;width:{% if key == 'manevrada' %}130px{% else %}90px{% endif %}"></th>
+          <th style="padding:9px 14px;width:120px"></th>
         </tr>
       </thead>
       <tbody>
@@ -143,11 +152,10 @@
         <td style="padding:11px 14px;font-size:13px;color:#333">{{ v.gelis_zamani[:16] if v.gelis_zamani else '—' }}</td>
         <td style="padding:11px 14px;font-size:13px;color:#333">{{ v.not_alani or '—' }}</td>
         <td style="padding:11px 14px;text-align:right;white-space:nowrap">
-          {% if key == 'manevrada' %}
-          <a href="/operations/add?vessel_id={{ v.id }}"
-             style="padding:5px 11px;border-radius:6px;background:#185FA5;color:#fff;
-                    font-size:12px;font-weight:700;text-decoration:none;margin-right:5px">+ İş</a>
-          {% endif %}
+          <a href="/vessels/{{ v.id }}/edit"
+             style="padding:5px 11px;border-radius:6px;border:1.5px solid #888;
+                    background:#fff;color:#555;font-size:12px;font-weight:700;
+                    text-decoration:none;margin-right:4px">Düzenle</a>
           <div style="position:relative;display:inline-block">
             <button onclick="toggleDurumMenu('{{ key }}_{{ v.id }}', event)"
               style="padding:5px 12px;border-radius:6px;border:1.5px solid #185FA5;
@@ -188,12 +196,13 @@
 
 <script>
 var SEGMENT_KEYS = ['gelecek','demirde','iskeleler','k_samandira','g_samandira','toros','irtibatta','manevrada'];
+var GEMI_EKLE_SEGMENTS = ['gelecek', 'irtibatta'];
 
 function toggleSegment(key) {
   var el  = document.getElementById('seg-' + key);
   var btn = document.getElementById('btn-' + key);
   var isOpen = el.style.display !== 'none';
-  // Hepsini kapat
+
   SEGMENT_KEYS.forEach(function(k) {
     document.getElementById('seg-' + k).style.display = 'none';
     var b = document.getElementById('btn-' + k);
@@ -206,6 +215,14 @@ function toggleSegment(key) {
   document.getElementById('search-result').style.display = 'none';
   document.getElementById('vessel-search').value = '';
   document.getElementById('search-clear').style.display = 'none';
+
+  // + Gemi ekle butonunu göster/gizle
+  var gemiEkleBtn = document.getElementById('btn-gemi-ekle');
+  if (!isOpen && GEMI_EKLE_SEGMENTS.indexOf(key) !== -1) {
+    gemiEkleBtn.style.display = 'inline-flex';
+  } else {
+    gemiEkleBtn.style.display = 'none';
+  }
 
   if (!isOpen) {
     el.style.display = 'block';
@@ -257,12 +274,12 @@ function searchVessel(q) {
   }
   clear.style.display = 'block';
 
-  // Tüm segmentleri kapat
   SEGMENT_KEYS.forEach(function(k) {
     document.getElementById('seg-' + k).style.display = 'none';
     var b = document.getElementById('btn-' + k);
     b.style.background = '#fff'; b.style.color = '#555'; b.style.borderColor = '#dde8f5';
   });
+  document.getElementById('btn-gemi-ekle').style.display = 'none';
 
   var found = allVessels.filter(function(v) {
     return v.ad.toLowerCase().includes(q.toLowerCase());

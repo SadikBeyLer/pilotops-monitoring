@@ -167,7 +167,7 @@ def index():
             ORDER BY son_fatigue_norm DESC
         """, (watch['id'], watch['id'], watch['id'])).fetchall()
 
-    # Dinlenme sonrası fatigue güncelle
+   # Dinlenme sonrası fatigue güncelle
         now = datetime.utcnow()
         pilots_list = []
         for p in pilots_raw:
@@ -183,12 +183,21 @@ def index():
                     if rest_h > 0:
                         recovered = apply_recovery(last_op['fatigue_toplam'], rest_h)
                         p['son_fatigue_norm'] = normalize_score(recovered)
-                        from fatigue_engine import fatigue_color
                         _, p['fatigue_durum'] = fatigue_color(recovered)
+                    # R/H hesapla
+                    total_h = round(rest_h, 1)
+                    days = int(total_h // 24)
+                    hours = round(total_h % 24, 1)
+                    if days > 0:
+                        p['rest_hours'] = f"{days}g {int(hours)}s"
+                    else:
+                        p['rest_hours'] = f"{hours}s"
                 except:
-                    pass
+                    p['rest_hours'] = None
+            else:
+                p['rest_hours'] = None
             pilots_list.append(p)
-        pilots_raw = sorted(pilots_list, key=lambda x: x['son_fatigue_norm'], reverse=True)    
+        pilots_raw = sorted(pilots_list, key=lambda x: x['son_fatigue_norm'], reverse=True)
 
         # Her pilot için iş listesini çek (accordion için)
         pilot_jobs = {}
