@@ -2,9 +2,9 @@
 {% block title %}Gemiler — PilotOps{% endblock %}
 {% block content %}
 
-<div class="page-header">
-  <div class="page-title">Gemi Düzenle</div>
-  <a href="/vessels" class="btn btn-secondary" style="margin-left:auto">← Geri</a>
+<div class="page-header" style="margin-bottom:16px">
+  <div class="page-title">Gemiler</div>
+  <a href="/vessels/add" id="btn-gemi-ekle" class="btn btn-primary" style="display:none">+ Gemi ekle</a>
 </div>
 
 {% set all_segments = [
@@ -251,11 +251,9 @@ var allVessels = [
    grt:"{% if v.grt %}{{ '{:,.0f}'.format(v.grt) }}{% else %}—{% endif %}",
    tip:"{{ v.tip or '—' }}",
    bt:{% if v.thruster_bas > 0 or v.thruster_kic > 0 %}true{% else %}false{% endif %},
-   tug:{% if v.tug_var and v.tug_var|int == 1 %}true{% else %}false{% endif %},
    fr:"{{ v.from_liman or '' }}",to_:"{{ v.to_liman or '' }}",
    eta:"{{ v.gelis_zamani[:16] if v.gelis_zamani else '—' }}",
-   acenta:"{{ v.acenta or '—' }}",process:"{{ v.process or '—' }}",
-   not_:"{{ v.not_alani or '' }}"
+   acenta:"{{ v.acenta or '—' }}",not_:"{{ v.not_alani or '' }}"
   }{% if not loop.last %},{% endif %}
   {% endfor %}
 ];
@@ -344,7 +342,7 @@ function setDurum(vesselId, durum) {
     .then(function(r) { return r.json(); })
     .then(function(d) { if (d.ok) location.reload(); });
 }
-// Sayfa açılınca URL'den segment aç
+
 document.addEventListener('DOMContentLoaded', function(){
   var params = new URLSearchParams(window.location.search);
   var seg = params.get('seg');
