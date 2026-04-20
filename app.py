@@ -446,7 +446,7 @@ def vessel_edit(vessel_id):
             vessel_id
         ))
         db.commit()
-        return redirect(url_for('vessels'))
+        return redirect(url_for('vessels') + '?seg=' + request.form.get('durum', 'gelecek'))
     return render_template('vessel_edit.html', vessel=vessel)
 
 
