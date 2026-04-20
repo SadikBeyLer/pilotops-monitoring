@@ -62,6 +62,16 @@ def init_db():
             pass
     db.close()
 
+def migrate_vessels():
+    db = sqlite3.connect(DATABASE)
+    cols = [r[1] for r in db.execute("PRAGMA table_info(vessels)").fetchall()]
+    if 'draft_bas' not in cols:
+        db.execute("ALTER TABLE vessels ADD COLUMN draft_bas REAL DEFAULT 0")
+    if 'draft_kic' not in cols:
+        db.execute("ALTER TABLE vessels ADD COLUMN draft_kic REAL DEFAULT 0")
+    db.commit()
+    db.close()    
+
 SAMANDIRALAR = ['wimba','g.nato','k.nato','sa/sa','petgaz','b.aygaz','k.aygaz','milangaz']
 
 def detect_is_tipi(from_nokta, to_nokta):
@@ -590,4 +600,6 @@ if __name__ == '__main__':
     app.run(debug=True, port=5001)
 
 with app.app_context():
-    init_db()
+    if not os.path.exists(DATABASE):
+        init_db()
+    migrate_vessels()
