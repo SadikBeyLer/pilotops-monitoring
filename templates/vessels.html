@@ -345,13 +345,13 @@ function setDurum(vesselId, durum) {
     .then(function(d) { if (d.ok) location.reload(); });
 }
 // Sayfa açılınca URL'den segment aç
-(function(){
+document.addEventListener('DOMContentLoaded', function(){
   var params = new URLSearchParams(window.location.search);
   var seg = params.get('seg');
   if (seg && SEGMENT_KEYS.indexOf(seg) !== -1) {
     toggleSegment(seg);
   }
-})();
+});
 </script>
 
 {% endblock %}
