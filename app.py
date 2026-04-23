@@ -153,6 +153,26 @@ def index():
                     WHERE op2.pilot_id=p.id
                     AND op2.on_station > datetime('now','-2 hours')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_to,
+                    (SELECT op2.off_station FROM operations op2
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_off_station,
+ 
+                    (SELECT op2.pob FROM operations op2
+                     WHERE op2.pilot_id=p.id
+                     AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_pob,
+ 
+                    (SELECT op2.poff FROM operations op2
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_poff,
+ 
+                    (SELECT op2.on_station FROM operations op2
+                    WHERE op2.pilot_id=p.id
+                    AND op2.on_station > datetime('now','-2 hours')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_on_station,
+ 
                    -- BT: thruster_bas veya thruster_kic varsa 1
                    (SELECT (CASE WHEN (v.thruster_bas > 0 OR v.thruster_kic > 0) THEN 1 ELSE 0 END)
                     FROM operations op2
