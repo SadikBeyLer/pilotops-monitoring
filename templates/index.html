@@ -33,7 +33,7 @@
   {% set norm  = p.son_fatigue_norm or 0 %}
   {% set durum = p.fatigue_durum or 'FIT' %}
   {% set wh    = p.calisma_saati or 0 %}
-  {% set r12 = p.rest_hours or '—' %}
+  {% set r12   = p.rest_hours or '—' %}
   {% set wh24  = p.calisma_24h or 0 %}
   {% set jobs  = pilot_jobs.get(p.pilot_id, []) %}
 
@@ -70,15 +70,16 @@
       </div>
     </td>
 
+    {# JOBS #}
     <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
-    <td style="padding:11px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
-    <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
-    <td style="padding:11px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
-    <td style="padding:11px 14px;text-align:center;font-size:14px;font-weight:600;color:#555">
-      {{ r12 }}
-    </td>
-    </td>
 
+    {# WORKING HRS #}
+    <td style="padding:11px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
+
+    {# R/H #}
+    <td style="padding:11px 14px;text-align:center;font-size:14px;font-weight:600;color:#555">{{ r12 }}</td>
+
+    {# FATIGUE #}
     <td style="padding:11px 14px;text-align:center;min-width:100px">
       <div style="font-size:20px;font-weight:800;color:{{ bar_color }}">
         {{ norm }}{% if norm > 100 %}+{% endif %}
@@ -88,6 +89,7 @@
       </div>
     </td>
 
+    {# MLC #}
     <td style="padding:11px 14px;text-align:center">
       {% if mlc_ok %}
       <span style="font-size:18px;color:#1a7a2e" title="MLC 2006 Uygun — 24s: {{ '%.1f'|format(wh24) }}s">✓</span>
@@ -96,7 +98,7 @@
       {% endif %}
     </td>
 
-    {# Active Vessel #}
+    {# ACTIVE VESSEL #}
     <td style="padding:11px 14px;min-width:220px">
       {% if p.aktif_gemi %}
       <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
@@ -118,6 +120,7 @@
       {% endif %}
     </td>
 
+    {# STATUS #}
     <td style="padding:11px 14px;text-align:center">
       <span class="badge {{ badge_cls }}">{{ durum }}</span>
     </td>
