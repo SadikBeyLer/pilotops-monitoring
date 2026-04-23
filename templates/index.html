@@ -89,18 +89,15 @@
       {% endif %}
     </td>
 
-    {# ACTIVE VESSEL — Fr/To/BT üstte, tarih + 4 saat altta #}
+    {# ACTIVE VESSEL — 2 satır #}
     <td style="padding:8px 10px;min-width:260px;text-align:center">
       {% if p.aktif_gemi %}
       <div style="display:inline-block;text-align:left">
-        {# Üst satır: gemi adı + Loa + Gt #}
+        {# Satır 1: Gemi adı + Loa + Gt + Fr/To/BT hepsi yan yana #}
         <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
           <span style="font-size:15px;font-weight:700;color:#185FA5;text-transform:uppercase">{{ p.aktif_gemi }}</span>
           {% if p.aktif_loa %}<span style="font-size:11px;color:#bbb">Loa: {{ p.aktif_loa|int }}m</span>{% endif %}
           {% if p.aktif_grt %}<span style="font-size:11px;color:#bbb">Gt: {{ p.aktif_grt|int }}</span>{% endif %}
-        </div>
-        {# İkinci satır: Fr / To / BT #}
-        <div style="margin-top:2px;display:flex;flex-wrap:wrap;gap:8px">
           {% if p.aktif_from %}
             {% set from_disp = 'Plt.Psn' if p.aktif_from|lower == 'pilot position' else p.aktif_from %}
             <span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ from_disp }}</span></span>
@@ -115,16 +112,19 @@
             <span style="font-size:11px;color:#999">BT: <span style="color:#aaa">No</span></span>
           {% endif %}
         </div>
-        {# Üçüncü satır: Tarih + 4 saat #}
+        {# Satır 2: Tarih (DD-MM-YYYY) + 4 saat #}
         {% if p.aktif_off_station %}
-        <div style="margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:11px;color:#aaa;font-weight:600">{{ p.aktif_off_station[:10] }}</span>
-          <span style="font-size:11px;color:#555">{{ p.aktif_off_station[11:16] if p.aktif_off_station else '—' }}</span>
-          <span style="font-size:10px;color:#ccc">|</span>
+        {% set d = p.aktif_off_station %}
+        {% set tarih = d[8:10] ~ '-' ~ d[5:7] ~ '-' ~ d[0:4] %}
+        <div style="margin-top:3px;display:flex;align-items:center;gap:5px">
+          <span style="font-size:11px;color:#aaa;font-weight:600">{{ tarih }}</span>
+          <span style="font-size:10px;color:#ddd">|</span>
+          <span style="font-size:11px;color:#555">{{ d[11:16] }}</span>
+          <span style="font-size:10px;color:#ddd">|</span>
           <span style="font-size:11px;color:#185FA5;font-weight:600">{{ p.aktif_pob[11:16] if p.aktif_pob else '—' }}</span>
-          <span style="font-size:10px;color:#ccc">|</span>
+          <span style="font-size:10px;color:#ddd">|</span>
           <span style="font-size:11px;color:#185FA5;font-weight:600">{{ p.aktif_poff[11:16] if p.aktif_poff else '—' }}</span>
-          <span style="font-size:10px;color:#ccc">|</span>
+          <span style="font-size:10px;color:#ddd">|</span>
           <span style="font-size:11px;color:#555">{{ p.aktif_on_station[11:16] if p.aktif_on_station else '—' }}</span>
         </div>
         {% endif %}
@@ -179,7 +179,11 @@
               {% set to = 'Plt.Psn.' if j.to_nokta|lower == 'pilot position' else j.to_nokta %}
               {{ fr }} → {{ to }}
             </td>
-            <td style="padding:7px 10px;text-align:center;color:#aaa;font-size:12px">{{ j.off_station[:10] if j.off_station else '—' }}</td>
+            <td style="padding:7px 10px;text-align:center;color:#aaa;font-size:12px">
+              {% if j.off_station %}
+                {{ j.off_station[8:10] }}-{{ j.off_station[5:7] }}-{{ j.off_station[0:4] }}
+              {% else %}—{% endif %}
+            </td>
             <td style="padding:7px 10px;text-align:center;color:#555">{{ j.off_station[11:16] if j.off_station else '—' }}</td>
             <td style="padding:7px 10px;text-align:center;color:#185FA5;font-weight:600">{{ j.pob[11:16] if j.pob else '—' }}</td>
             <td style="padding:7px 10px;text-align:center;color:#185FA5;font-weight:600">{{ j.poff[11:16] if j.poff else '—' }}</td>
