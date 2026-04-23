@@ -17,15 +17,15 @@
 <table style="width:100%;border-collapse:collapse">
   <thead>
     <tr style="background:#F4F7FB;border-bottom:2px solid #dde8f5">
-      <th style="padding:12px 14px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555;width:36px">#</th>
-      <th style="padding:12px 14px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Pilot</th>
-      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Jobs</th>
-      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Working Hrs</th>
-      <th style="padding:10px 14px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">R/H</th>
-      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Fatigue</th>
-      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">MLC</th>
-      <th style="padding:12px 14px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Active Vessel</th>
-      <th style="padding:12px 14px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Status</th>
+      <th style="padding:8px 10px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555;width:36px">#</th>
+      <th style="padding:8px 10px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Pilot</th>
+      <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Jobs</th>
+      <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Working Hrs</th>
+      <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">R/H</th>
+      <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Fatigue</th>
+      <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">MLC</th>
+      <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Active Vessel</th>
+      <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Status</th>
     </tr>
   </thead>
   <tbody>
@@ -58,10 +58,10 @@
   <tr style="background:{{ row_bg }};border-bottom:{% if jobs %}none{% else %}1px solid #f0f0f0{% endif %};cursor:pointer"
       onclick="toggleJobs({{ p.pilot_id }}, this)">
 
-    <td style="padding:11px 14px;color:#bbb;font-size:14px">{{ loop.index }}</td>
+    <td style="padding:8px 10px;color:#bbb;font-size:14px">{{ loop.index }}</td>
 
     {# Pilot adı + accordion oku #}
-    <td style="padding:11px 14px">
+    <td style="padding:8px 10px">
       <div style="display:flex;align-items:center;gap:7px">
         <span style="font-weight:700;font-size:15px;color:#1a1a1a">{{ p.ad_soyad }}</span>
         {% if jobs %}
@@ -71,16 +71,16 @@
     </td>
 
     {# JOBS #}
-    <td style="padding:11px 14px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
+    <td style="padding:8px 10px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
 
     {# WORKING HRS #}
-    <td style="padding:11px 14px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
+    <td style="padding:8px 10px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
 
     {# R/H #}
-    <td style="padding:11px 14px;text-align:center;font-size:14px;font-weight:600;color:#555">{{ r12 }}</td>
+    <td style="padding:8px 10px;text-align:center;font-size:14px;font-weight:600;color:#555">{{ r12 }}</td>
 
     {# FATIGUE #}
-    <td style="padding:11px 14px;text-align:center;min-width:100px">
+    <td style="padding:8px 10px;text-align:center;min-width:100px">
       <div style="font-size:20px;font-weight:800;color:{{ bar_color }}">
         {{ norm }}{% if norm > 100 %}+{% endif %}
       </div>
@@ -90,7 +90,7 @@
     </td>
 
     {# MLC #}
-    <td style="padding:11px 14px;text-align:center">
+    <td style="padding:8px 10px;text-align:center">
       {% if mlc_ok %}
       <span style="font-size:18px;color:#1a7a2e" title="MLC 2006 Uygun — 24s: {{ '%.1f'|format(wh24) }}s">✓</span>
       {% else %}
@@ -99,21 +99,23 @@
     </td>
 
     {# ACTIVE VESSEL #}
-    <td style="padding:11px 14px;min-width:220px">
+    <td style="padding:8px 10px;min-width:240px;text-align:center">
       {% if p.aktif_gemi %}
-      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
-        <span style="font-size:15px;font-weight:700;color:#185FA5;text-transform:uppercase">{{ p.aktif_gemi }}</span>
-        {% if p.aktif_loa %}<span style="font-size:11px;color:#bbb">Loa: {{ p.aktif_loa|int }}m</span>{% endif %}
-        {% if p.aktif_grt %}<span style="font-size:11px;color:#bbb">Gt: {{ p.aktif_grt|int }}</span>{% endif %}
-      </div>
-      <div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:8px">
-        {% if p.aktif_from %}<span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ p.aktif_from }}</span></span>{% endif %}
-        {% if p.aktif_to %}<span style="font-size:11px;color:#999">To: <span style="color:#666">{{ p.aktif_to }}</span></span>{% endif %}
-        {% if p.aktif_thruster %}
-          <span style="font-size:11px;color:#999">BT: <span style="color:#1a7a2e;font-weight:700">Yes</span></span>
-        {% else %}
-          <span style="font-size:11px;color:#999">BT: <span style="color:#aaa">No</span></span>
-        {% endif %}
+      <div style="display:inline-block;text-align:left">
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <span style="font-size:15px;font-weight:700;color:#185FA5;text-transform:uppercase">{{ p.aktif_gemi }}</span>
+          {% if p.aktif_loa %}<span style="font-size:11px;color:#bbb">Loa: {{ p.aktif_loa|int }}m</span>{% endif %}
+          {% if p.aktif_grt %}<span style="font-size:11px;color:#bbb">Gt: {{ p.aktif_grt|int }}</span>{% endif %}
+        </div>
+        <div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:8px">
+          {% if p.aktif_from %}<span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ p.aktif_from }}</span></span>{% endif %}
+          {% if p.aktif_to %}<span style="font-size:11px;color:#999">To: <span style="color:#666">{{ p.aktif_to }}</span></span>{% endif %}
+          {% if p.aktif_thruster %}
+            <span style="font-size:11px;color:#999">BT: <span style="color:#1a7a2e;font-weight:700">Yes</span></span>
+          {% else %}
+            <span style="font-size:11px;color:#999">BT: <span style="color:#aaa">No</span></span>
+          {% endif %}
+        </div>
       </div>
       {% else %}
       <span style="color:#ccc">—</span>
@@ -121,7 +123,7 @@
     </td>
 
     {# STATUS #}
-    <td style="padding:11px 14px;text-align:center">
+    <td style="padding:8px 10px;text-align:center">
       <span class="badge {{ badge_cls }}">{{ durum }}</span>
     </td>
 
