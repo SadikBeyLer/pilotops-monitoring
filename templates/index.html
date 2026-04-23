@@ -18,7 +18,7 @@
   <thead>
     <tr style="background:#F4F7FB;border-bottom:2px solid #dde8f5">
       <th style="padding:8px 10px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555;width:36px">#</th>
-      <th style="padding:8px 10px;text-align:left;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Pilot</th>
+      <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Pilot</th>
       <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Jobs</th>
       <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#555">Working Hrs</th>
       <th style="padding:8px 10px;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888">R/H</th>
@@ -58,8 +58,9 @@
 
     <td style="padding:8px 10px;color:#bbb;font-size:14px">{{ loop.index }}</td>
 
-    <td style="padding:8px 10px">
-      <div style="display:flex;align-items:center;gap:7px">
+    {# PILOT — ortalandı #}
+    <td style="padding:8px 10px;text-align:center">
+      <div style="display:inline-flex;align-items:center;gap:7px">
         <span style="font-weight:700;font-size:15px;color:#1a1a1a">{{ p.ad_soyad }}</span>
         {% if jobs %}
         <span id="arrow-{{ p.pilot_id }}" style="font-size:11px;color:#aaa;transition:transform .2s;display:inline-block">▼</span>
@@ -88,23 +89,45 @@
       {% endif %}
     </td>
 
-    <td style="padding:8px 10px;min-width:240px;text-align:center">
+    {# ACTIVE VESSEL — Fr/To/BT üstte, tarih + 4 saat altta #}
+    <td style="padding:8px 10px;min-width:260px;text-align:center">
       {% if p.aktif_gemi %}
       <div style="display:inline-block;text-align:left">
-        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+        {# Üst satır: gemi adı + Loa + Gt #}
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
           <span style="font-size:15px;font-weight:700;color:#185FA5;text-transform:uppercase">{{ p.aktif_gemi }}</span>
           {% if p.aktif_loa %}<span style="font-size:11px;color:#bbb">Loa: {{ p.aktif_loa|int }}m</span>{% endif %}
           {% if p.aktif_grt %}<span style="font-size:11px;color:#bbb">Gt: {{ p.aktif_grt|int }}</span>{% endif %}
         </div>
-        <div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:8px">
-          {% if p.aktif_from %}<span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ p.aktif_from }}</span></span>{% endif %}
-          {% if p.aktif_to %}<span style="font-size:11px;color:#999">To: <span style="color:#666">{{ p.aktif_to }}</span></span>{% endif %}
+        {# İkinci satır: Fr / To / BT #}
+        <div style="margin-top:2px;display:flex;flex-wrap:wrap;gap:8px">
+          {% if p.aktif_from %}
+            {% set from_disp = 'Plt.Psn' if p.aktif_from|lower == 'pilot position' else p.aktif_from %}
+            <span style="font-size:11px;color:#999">Fr: <span style="color:#666">{{ from_disp }}</span></span>
+          {% endif %}
+          {% if p.aktif_to %}
+            {% set to_disp = 'Plt.Psn' if p.aktif_to|lower == 'pilot position' else p.aktif_to %}
+            <span style="font-size:11px;color:#999">To: <span style="color:#666">{{ to_disp }}</span></span>
+          {% endif %}
           {% if p.aktif_thruster %}
             <span style="font-size:11px;color:#999">BT: <span style="color:#1a7a2e;font-weight:700">Yes</span></span>
           {% else %}
             <span style="font-size:11px;color:#999">BT: <span style="color:#aaa">No</span></span>
           {% endif %}
         </div>
+        {# Üçüncü satır: Tarih + 4 saat #}
+        {% if p.aktif_off_station %}
+        <div style="margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:11px;color:#aaa;font-weight:600">{{ p.aktif_off_station[:10] }}</span>
+          <span style="font-size:11px;color:#555">{{ p.aktif_off_station[11:16] if p.aktif_off_station else '—' }}</span>
+          <span style="font-size:10px;color:#ccc">|</span>
+          <span style="font-size:11px;color:#185FA5;font-weight:600">{{ p.aktif_pob[11:16] if p.aktif_pob else '—' }}</span>
+          <span style="font-size:10px;color:#ccc">|</span>
+          <span style="font-size:11px;color:#185FA5;font-weight:600">{{ p.aktif_poff[11:16] if p.aktif_poff else '—' }}</span>
+          <span style="font-size:10px;color:#ccc">|</span>
+          <span style="font-size:11px;color:#555">{{ p.aktif_on_station[11:16] if p.aktif_on_station else '—' }}</span>
+        </div>
+        {% endif %}
       </div>
       {% else %}
       <span style="color:#ccc">—</span>
@@ -125,10 +148,11 @@
         <table style="width:100%;border-collapse:collapse;font-size:13px">
           <thead>
             <tr style="color:#999;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e8edf5">
-              <th style="padding:5px 10px;text-align:left">#</th>
-              <th style="padding:5px 10px;text-align:left">Gemi</th>
+              <th style="padding:5px 10px;text-align:left">No</th>
+              <th style="padding:5px 10px;text-align:left">Gemi Adı</th>
               <th style="padding:5px 10px;text-align:left">Loa / Gt</th>
-              <th style="padding:5px 10px;text-align:left">Fr → To</th>
+              <th style="padding:5px 10px;text-align:center">Fr → To</th>
+              <th style="padding:5px 10px;text-align:center">Tarih</th>
               <th style="padding:5px 10px;text-align:center">Off St.</th>
               <th style="padding:5px 10px;text-align:center">POB</th>
               <th style="padding:5px 10px;text-align:center">P.Off</th>
@@ -146,11 +170,16 @@
             <td style="padding:7px 10px;color:#bbb">{{ loop.index }}</td>
             <td style="padding:7px 10px;font-weight:700;color:#1a1a1a;text-transform:uppercase">{{ j.gemi_adi }}</td>
             <td style="padding:7px 10px;color:#888">
-              {% if j.loa %}{{ j.loa|int }}m{% endif %}
+              {% if j.loa %}{{ j.loa|int }}{% endif %}
               {% if j.loa and j.grt %} / {% endif %}
               {% if j.grt %}{{ j.grt|int }}{% endif %}
             </td>
-            <td style="padding:7px 10px;color:#555">{{ j.from_nokta }} → {{ j.to_nokta }}</td>
+            <td style="padding:7px 10px;color:#555;text-align:center">
+              {% set fr = 'Plt.Psn.' if j.from_nokta|lower == 'pilot position' else j.from_nokta %}
+              {% set to = 'Plt.Psn.' if j.to_nokta|lower == 'pilot position' else j.to_nokta %}
+              {{ fr }} → {{ to }}
+            </td>
+            <td style="padding:7px 10px;text-align:center;color:#aaa;font-size:12px">{{ j.off_station[:10] if j.off_station else '—' }}</td>
             <td style="padding:7px 10px;text-align:center;color:#555">{{ j.off_station[11:16] if j.off_station else '—' }}</td>
             <td style="padding:7px 10px;text-align:center;color:#185FA5;font-weight:600">{{ j.pob[11:16] if j.pob else '—' }}</td>
             <td style="padding:7px 10px;text-align:center;color:#185FA5;font-weight:600">{{ j.poff[11:16] if j.poff else '—' }}</td>
@@ -176,17 +205,17 @@
             <td style="padding:6px 10px;color:#bbb;font-size:12px">{{ loop.index }}</td>
             <td style="padding:6px 10px;font-weight:700;color:#1a1a1a;text-transform:uppercase;font-size:12px">{{ j.gemi_adi }}</td>
             <td style="padding:6px 10px;color:#888;font-size:12px">
-              {% if j.loa %}{{ j.loa|int }}m{% endif %}
+              {% if j.loa %}{{ j.loa|int }}{% endif %}
               {% if j.loa and j.grt %} / {% endif %}
               {% if j.grt %}{{ j.grt|int }}{% endif %}
             </td>
-            <td style="padding:5px 8px">
+            <td style="padding:5px 8px" colspan="2">
               <div style="display:flex;align-items:center;gap:3px">
                 <input id="edit-from-{{ j.id }}" type="text" placeholder="Fr"
-                  style="width:75px;padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px">
+                  style="width:80px;padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px">
                 <span style="color:#aaa;font-size:10px">→</span>
                 <input id="edit-to-{{ j.id }}" type="text" placeholder="To"
-                  style="width:75px;padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px">
+                  style="width:80px;padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px">
               </div>
             </td>
             <td style="padding:5px 6px"><input id="edit-off-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
