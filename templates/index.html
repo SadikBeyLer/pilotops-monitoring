@@ -37,7 +37,6 @@
   {% set wh24  = p.calisma_24h or 0 %}
   {% set jobs  = pilot_jobs.get(p.pilot_id, []) %}
 
-  {# Fatigue renk/badge #}
   {% if norm > 100 %}
     {% set row_bg='#FFF0F0' %}{% set badge_cls='badge-darkred' %}{% set bar_color='#7a0010' %}
   {% elif norm >= 90 %}
@@ -54,13 +53,11 @@
 
   {% set mlc_ok = wh24 <= 14 %}
 
-  {# Ana pilot satırı #}
   <tr style="background:{{ row_bg }};border-bottom:{% if jobs %}none{% else %}1px solid #f0f0f0{% endif %};cursor:pointer"
       onclick="toggleJobs({{ p.pilot_id }}, this)">
 
     <td style="padding:8px 10px;color:#bbb;font-size:14px">{{ loop.index }}</td>
 
-    {# Pilot adı + accordion oku #}
     <td style="padding:8px 10px">
       <div style="display:flex;align-items:center;gap:7px">
         <span style="font-weight:700;font-size:15px;color:#1a1a1a">{{ p.ad_soyad }}</span>
@@ -70,16 +67,10 @@
       </div>
     </td>
 
-    {# JOBS #}
     <td style="padding:8px 10px;text-align:center;font-size:15px;font-weight:700">{{ p.is_sayisi or 0 }}</td>
-
-    {# WORKING HRS #}
     <td style="padding:8px 10px;text-align:center;font-size:15px">{{ '%.2f'|format(wh) }}</td>
-
-    {# R/H #}
     <td style="padding:8px 10px;text-align:center;font-size:14px;font-weight:600;color:#555">{{ r12 }}</td>
 
-    {# FATIGUE #}
     <td style="padding:8px 10px;text-align:center;min-width:100px">
       <div style="font-size:20px;font-weight:800;color:{{ bar_color }}">
         {{ norm }}{% if norm > 100 %}+{% endif %}
@@ -89,7 +80,6 @@
       </div>
     </td>
 
-    {# MLC #}
     <td style="padding:8px 10px;text-align:center">
       {% if mlc_ok %}
       <span style="font-size:18px;color:#1a7a2e" title="MLC 2006 Uygun — 24s: {{ '%.1f'|format(wh24) }}s">✓</span>
@@ -98,7 +88,6 @@
       {% endif %}
     </td>
 
-    {# ACTIVE VESSEL #}
     <td style="padding:8px 10px;min-width:240px;text-align:center">
       {% if p.aktif_gemi %}
       <div style="display:inline-block;text-align:left">
@@ -122,14 +111,13 @@
       {% endif %}
     </td>
 
-    {# STATUS #}
     <td style="padding:8px 10px;text-align:center">
       <span class="badge {{ badge_cls }}">{{ durum }}</span>
     </td>
 
   </tr>
 
-  {# Accordion — iş listesi (başlangıçta gizli) #}
+  {# Accordion — iş listesi #}
   {% if jobs %}
   <tr id="jobs-{{ p.pilot_id }}" style="display:none;background:#F8FAFD">
     <td colspan="9" style="padding:0">
@@ -147,11 +135,14 @@
               <th style="padding:5px 10px;text-align:center">On St.</th>
               <th style="padding:5px 10px;text-align:center">BT</th>
               <th style="padding:5px 10px;text-align:center">Fatigue</th>
+              <th style="padding:5px 10px;width:72px"></th>
             </tr>
           </thead>
           <tbody>
           {% for j in jobs %}
-          <tr style="border-top:1px solid #edf0f5">
+
+          {# Görünüm satırı #}
+          <tr id="job-view-{{ j.id }}" style="border-top:1px solid #edf0f5">
             <td style="padding:7px 10px;color:#bbb">{{ loop.index }}</td>
             <td style="padding:7px 10px;font-weight:700;color:#1a1a1a;text-transform:uppercase">{{ j.gemi_adi }}</td>
             <td style="padding:7px 10px;color:#888">
@@ -172,14 +163,52 @@
               {% endif %}
             </td>
             <td style="padding:7px 10px;text-align:center;font-weight:700;color:#185FA5">{{ j.fatigue_norm }}</td>
+            <td style="padding:7px 10px;text-align:center;white-space:nowrap">
+              <button onclick="event.stopPropagation();startEdit({{ j.id }}, '{{ j.from_nokta|replace("'", "\\'") }}', '{{ j.to_nokta|replace("'", "\\'") }}', '{{ j.off_station or "" }}', '{{ j.pob or "" }}', '{{ j.poff or "" }}', '{{ j.on_station or "" }}')"
+                style="background:none;border:1px solid #dde8f5;border-radius:5px;padding:3px 7px;font-size:12px;color:#185FA5;cursor:pointer;margin-right:3px">✏️</button>
+              <button onclick="event.stopPropagation();silJob({{ j.id }})"
+                style="background:none;border:1px solid #fdd;border-radius:5px;padding:3px 7px;font-size:12px;color:#c0152a;cursor:pointer">🗑</button>
+            </td>
           </tr>
+
+          {# Inline edit satırı — başlangıçta gizli #}
+          <tr id="job-edit-{{ j.id }}" style="display:none;background:#EEF4FF;border-top:1px solid #c8d8f0">
+            <td style="padding:6px 10px;color:#bbb;font-size:12px">{{ loop.index }}</td>
+            <td style="padding:6px 10px;font-weight:700;color:#1a1a1a;text-transform:uppercase;font-size:12px">{{ j.gemi_adi }}</td>
+            <td style="padding:6px 10px;color:#888;font-size:12px">
+              {% if j.loa %}{{ j.loa|int }}m{% endif %}
+              {% if j.loa and j.grt %} / {% endif %}
+              {% if j.grt %}{{ j.grt|int }}{% endif %}
+            </td>
+            <td style="padding:5px 8px">
+              <div style="display:flex;align-items:center;gap:3px">
+                <input id="edit-from-{{ j.id }}" type="text" placeholder="Fr"
+                  style="width:75px;padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px">
+                <span style="color:#aaa;font-size:10px">→</span>
+                <input id="edit-to-{{ j.id }}" type="text" placeholder="To"
+                  style="width:75px;padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px">
+              </div>
+            </td>
+            <td style="padding:5px 6px"><input id="edit-off-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
+            <td style="padding:5px 6px"><input id="edit-pob-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
+            <td style="padding:5px 6px"><input id="edit-poff-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
+            <td style="padding:5px 6px"><input id="edit-on-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
+            <td></td>
+            <td></td>
+            <td style="padding:5px 10px;text-align:center;white-space:nowrap">
+              <button onclick="event.stopPropagation();saveJob({{ j.id }})"
+                style="background:#185FA5;border:none;border-radius:5px;padding:4px 10px;font-size:12px;color:#fff;cursor:pointer;margin-right:3px">✓</button>
+              <button onclick="event.stopPropagation();cancelEdit({{ j.id }})"
+                style="background:none;border:1px solid #ccc;border-radius:5px;padding:4px 10px;font-size:12px;color:#888;cursor:pointer">✕</button>
+            </td>
+          </tr>
+
           {% endfor %}
           </tbody>
         </table>
       </div>
     </td>
   </tr>
-  {# Ayırıcı çizgi #}
   <tr style="background:{{ row_bg }}">
     <td colspan="9" style="padding:0;border-bottom:1px solid #f0f0f0;height:1px"></td>
   </tr>
@@ -202,7 +231,21 @@
 </table>
 </div>
 
+{# Silme onay modalı #}
+<div id="sil-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:10px;padding:28px 32px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center">
+    <div style="font-size:28px;margin-bottom:10px">🗑</div>
+    <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:6px">Bu işi silmek istediğine emin misin?</div>
+    <div style="font-size:13px;color:#999;margin-bottom:22px">Bu işlem geri alınamaz.</div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button onclick="silIptal()" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:7px;background:#fff;color:#555;font-size:14px;cursor:pointer">İptal</button>
+      <button onclick="silOnayla()" style="flex:1;padding:9px;border:none;border-radius:7px;background:#c0152a;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Sil</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ── Accordion ──────────────────────────────────────────────
 function toggleJobs(pilotId, row) {
   var jobsRow = document.getElementById('jobs-' + pilotId);
   var arrow   = document.getElementById('arrow-' + pilotId);
@@ -214,6 +257,65 @@ function toggleJobs(pilotId, row) {
     jobsRow.style.display = 'none';
     if (arrow) arrow.style.transform = 'rotate(0deg)';
   }
+}
+
+// ── Inline Edit ────────────────────────────────────────────
+function startEdit(id, from, to, off, pob, poff, on) {
+  function toLocal(s) {
+    if (!s) return '';
+    return s.length >= 16 ? s.substring(0, 16) : s;
+  }
+  document.getElementById('edit-from-' + id).value  = from;
+  document.getElementById('edit-to-' + id).value    = to;
+  document.getElementById('edit-off-' + id).value   = toLocal(off);
+  document.getElementById('edit-pob-' + id).value   = toLocal(pob);
+  document.getElementById('edit-poff-' + id).value  = toLocal(poff);
+  document.getElementById('edit-on-' + id).value    = toLocal(on);
+  document.getElementById('job-view-' + id).style.display = 'none';
+  document.getElementById('job-edit-' + id).style.display = 'table-row';
+}
+
+function cancelEdit(id) {
+  document.getElementById('job-edit-' + id).style.display = 'none';
+  document.getElementById('job-view-' + id).style.display = 'table-row';
+}
+
+function saveJob(id) {
+  var data = new FormData();
+  data.append('from_nokta',  document.getElementById('edit-from-' + id).value);
+  data.append('to_nokta',    document.getElementById('edit-to-' + id).value);
+  data.append('off_station', document.getElementById('edit-off-' + id).value);
+  data.append('pob',         document.getElementById('edit-pob-' + id).value);
+  data.append('poff',        document.getElementById('edit-poff-' + id).value);
+  data.append('on_station',  document.getElementById('edit-on-' + id).value);
+  fetch('/operations/' + id + '/edit', { method: 'POST', body: data })
+    .then(function(r) {
+      if (r.ok) { location.reload(); }
+      else { r.text().then(function(t) { alert('Hata: ' + t); }); }
+    });
+}
+
+// ── Silme ──────────────────────────────────────────────────
+var _silId = null;
+
+function silJob(id) {
+  _silId = id;
+  document.getElementById('sil-modal').style.display = 'flex';
+}
+
+function silIptal() {
+  _silId = null;
+  document.getElementById('sil-modal').style.display = 'none';
+}
+
+function silOnayla() {
+  if (!_silId) return;
+  fetch('/operations/' + _silId + '/sil', { method: 'POST', body: new FormData() })
+    .then(function(r) {
+      if (r.ok) { location.reload(); }
+      else { alert('Silme başarısız.'); }
+    });
+  document.getElementById('sil-modal').style.display = 'none';
 }
 </script>
 

@@ -593,6 +593,85 @@ def pilot_jobs(pilot_id):
     """,(pilot_id,)).fetchall()
     return render_template('pilot_jobs.html',pilot=pilot,jobs=jobs)
 
+# ── Operation Edit ───────────────────────────────────────────
+@app.route('/operations/<int:op_id>/edit', methods=['POST'])
+def operation_edit(op_id):
+    db = get_db()
+    op = db.execute("SELECT * FROM operations WHERE id=?", (op_id,)).fetchone()
+    if not op:
+        return 'İş bulunamadı', 404
+
+    from_nokta = request.form.get('from_nokta', '').strip()
+    to_nokta   = request.form.get('to_nokta', '').strip()
+    off_st     = request.form.get('off_station', '')
+    pob        = request.form.get('pob', '')
+    poff       = request.form.get('poff', '')
+    on_st      = request.form.get('on_station', '')
+
+    if not all([from_nokta, to_nokta, off_st, pob, poff, on_st]):
+        return 'Eksik alan', 400
+
+    # Fatigue yeniden hesapla
+    is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
+
+    base = off_st[:10] + 'T00:00:00'
+    off_h  = dt_to_abs_hour(off_st, base)
+    pob_h  = dt_to_abs_hour(pob, base)
+    poff_h = dt_to_abs_hour(poff, base)
+    on_h   = dt_to_abs_hour(on_st, base)
+
+    if pob_h  < off_h:  pob_h  += 24
+    if poff_h < pob_h:  poff_h += 24
+    if on_h   < poff_h: on_h   += 24
+
+    vessel = db.execute("SELECT grt FROM vessels WHERE id=?", (op['vessel_id'],)).fetchone()
+    grt = vessel['grt'] if vessel else 8000
+
+    katki = job_contrib(off_h, pob_h, poff_h, on_h, is_tipi, grt)
+
+    # Bir önceki işi bul (bu iş hariç)
+    prev = db.execute(
+        "SELECT fatigue_toplam, on_station FROM operations WHERE pilot_id=? AND id!=? ORDER BY olusturma DESC LIMIT 1",
+        (op['pilot_id'], op_id)
+    ).fetchone()
+
+    if prev:
+        rest_h = (datetime.fromisoformat(off_st) - datetime.fromisoformat(prev['on_station'])).total_seconds() / 3600
+        if rest_h < 0: rest_h = 0
+        prev_score = apply_recovery(prev['fatigue_toplam'], rest_h)
+    else:
+        prev_score = 0.0
+
+    toplam = prev_score + katki
+    norm   = normalize_score(toplam)
+    _, durum = fatigue_color(toplam)
+
+    db.execute("""
+        UPDATE operations SET
+            from_nokta=?, to_nokta=?,
+            off_station=?, pob=?, poff=?, on_station=?,
+            is_tipi=?, k_carpan=?,
+            fatigue_katki=?, fatigue_toplam=?, fatigue_norm=?, fatigue_durum=?
+        WHERE id=?
+    """, (
+        from_nokta, to_nokta,
+        off_st, pob, poff, on_st,
+        is_tipi, k,
+        katki, toplam, norm, durum,
+        op_id
+    ))
+    db.commit()
+    return 'ok', 200
+
+
+# ── Operation Sil ─────────────────────────────────────────────
+@app.route('/operations/<int:op_id>/sil', methods=['POST'])
+def operation_sil(op_id):
+    db = get_db()
+    db.execute("DELETE FROM operations WHERE id=?", (op_id,))
+    db.commit()
+    return 'ok', 200
+
 if __name__ == '__main__':
     if not os.path.exists(DATABASE):
         init_db()
