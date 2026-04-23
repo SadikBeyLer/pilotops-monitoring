@@ -504,9 +504,9 @@ def operation_add():
         draft_kic  = float(request.form.get('draft_kic',0) or 0)
 
         # Tarih sınırı kontrolü — 1 gün öncesi / 1 gün sonrası
-        now = datetime.utcnow()
+        now = datetime.now()
         min_dt = datetime(now.year, now.month, now.day) - __import__('datetime').timedelta(days=1)
-        max_dt = datetime(now.year, now.month, now.day) + __import__('datetime').timedelta(days=1)
+        max_dt = datetime(now.year, now.month, now.day) + __import__('datetime').timedelta(days=2)
         for dt_str in [off_st, pob, poff, on_st]:
             try:
                 dt_val = datetime.fromisoformat(dt_str)
