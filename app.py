@@ -405,10 +405,10 @@ def vessel_add():
         db = get_db()
         imo = request.form.get('imo_no', '').strip()
         if not imo:
-            return jsonify({'ok': False, 'hata': 'IMO numarası boş bırakılamaz.'})
+            return render_template('vessel_add.html', hata='IMO numarası boş bırakılamaz.')
         mevcut = db.execute("SELECT id FROM vessels WHERE imo_no=?", (imo,)).fetchone()
         if mevcut:
-            return jsonify({'ok': False, 'hata': 'Bu IMO numarası zaten kayıtlı.'})
+            return render_template('vessel_add.html', hata='Bu IMO numarası zaten kayıtlı.')
         thruster_var = int(request.form.get('thruster_var', 0) or 0)
         thruster_bas = int(request.form.get('thruster_kw', 0) or 0) if thruster_var else 0
         thruster_kic = 0
@@ -440,8 +440,8 @@ def vessel_add():
             request.form.get('process',''),
         ))
         db.commit()
-        return jsonify({'ok': True})
-    return redirect(url_for('vessels'))
+        return redirect(url_for('vessels') + '?seg=' + request.form.get('durum', 'gelecek'))
+    return render_template('vessel_add.html')
 
 @app.route('/vessels/<int:vessel_id>/edit', methods=['GET','POST'])
 def vessel_edit(vessel_id):
