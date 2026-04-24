@@ -532,9 +532,9 @@ def operation_add():
         watch_id = watch['id'] if watch else 1
         base   = off_st[:10]+'T00:00:00'
         off_h  = dt_to_abs_hour(off_st,base)
-        pob_h  = dt_to_abs_hour(pob,base)
-        poff_h = dt_to_abs_hour(poff,base)
-        on_h   = dt_to_abs_hour(on_st,base)
+        pob_h  = dt_to_abs_hour(pob,  base) if pob  else off_h
+        poff_h = dt_to_abs_hour(poff, base) if poff else off_h
+        on_h   = dt_to_abs_hour(on_st,base) if on_st else off_h
         if pob_h  < off_h:  pob_h  += 24
         if poff_h < pob_h:  poff_h += 24
         if on_h   < poff_h: on_h   += 24
@@ -547,9 +547,9 @@ def operation_add():
         ).fetchone()
         if prev:
             prev_on = prev['on_station'] if prev['on_station'] else off_st
-            rest_h = (datetime.fromisoformat(off_st)-datetime.fromisoformat(prev_on)).total_seconds()/3600
+            rest_h = (datetime.fromisoformat(off_st) - datetime.fromisoformat(prev_on)).total_seconds() / 3600
             if rest_h < 0: rest_h = 0
-            prev_score = apply_recovery(prev['fatigue_toplam'],rest_h)
+            prev_score = apply_recovery(prev['fatigue_toplam'], rest_h)
         else:
             prev_score = 0.0
         toplam = prev_score + katki
