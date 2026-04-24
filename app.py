@@ -409,6 +409,9 @@ def vessel_add():
         mevcut = db.execute("SELECT id FROM vessels WHERE imo_no=?", (imo,)).fetchone()
         if mevcut:
             return render_template('vessel_add.html', hata='Bu IMO numarası zaten kayıtlı.')
+        thruster_var = int(request.form.get('thruster_var', 0) or 0)
+        thruster_bas = int(request.form.get('thruster_kw', 0) or 0) if thruster_var else 0
+        thruster_kic = 0
         db.execute("""
             INSERT INTO vessels
             (imo_no,gemi_adi,tip,bayrak,grt,loa,
@@ -423,15 +426,14 @@ def vessel_add():
             request.form.get('bayrak',''),
             float(request.form.get('grt',0) or 0),
             float(request.form.get('loa',0) or 0),
-            thruster_var = int(request.form.get('thruster_var', 0) or 0)
-            thruster_bas = int(request.form.get('thruster_kw', 0) or 0) if thruster_var else 0
-            thruster_kic = 0
+            thruster_bas,
+            thruster_kic,
             1 if request.form.get('tehlikeli_yuk') else 0,
             request.form.get('not_alani',''),
             request.form.get('from_liman',''),
             request.form.get('to_liman',''),
             request.form.get('gelis_zamani',''),
-            request.form.get('durum','gelecek'),
+            'gelecek',
             request.form.get('acenta',''),
             int(request.form.get('tug_var',0) or 0),
             int(request.form.get('tug_adet',0) or 0),
@@ -448,6 +450,9 @@ def vessel_edit(vessel_id):
     if not vessel:
         return redirect(url_for('vessels'))
     if request.method == 'POST':
+        thruster_var = int(request.form.get('thruster_var', 0) or 0)
+        thruster_bas = int(request.form.get('thruster_kw', 0) or 0) if thruster_var else 0
+        thruster_kic = 0
         db.execute("""
             UPDATE vessels SET
             imo_no=?, gemi_adi=?, tip=?, bayrak=?, grt=?, loa=?,
@@ -463,9 +468,8 @@ def vessel_edit(vessel_id):
             request.form.get('bayrak',''),
             float(request.form.get('grt',0) or 0),
             float(request.form.get('loa',0) or 0),
-            thruster_var = int(request.form.get('thruster_var', 0) or 0)
-            thruster_bas = int(request.form.get('thruster_kw', 0) or 0) if thruster_var else 0
-            thruster_kic = 0
+            thruster_bas,
+            thruster_kic,
             1 if request.form.get('tehlikeli_yuk') else 0,
             request.form.get('not_alani',''),
             request.form.get('from_liman',''),
