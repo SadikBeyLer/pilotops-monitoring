@@ -423,8 +423,9 @@ def vessel_add():
             request.form.get('bayrak',''),
             float(request.form.get('grt',0) or 0),
             float(request.form.get('loa',0) or 0),
-            int(request.form.get('thruster_bas',0) or 0),
-            int(request.form.get('thruster_kic',0) or 0),
+            thruster_var = int(request.form.get('thruster_var', 0) or 0)
+            thruster_bas = int(request.form.get('thruster_kw', 0) or 0) if thruster_var else 0
+            thruster_kic = 0
             1 if request.form.get('tehlikeli_yuk') else 0,
             request.form.get('not_alani',''),
             request.form.get('from_liman',''),
@@ -462,8 +463,9 @@ def vessel_edit(vessel_id):
             request.form.get('bayrak',''),
             float(request.form.get('grt',0) or 0),
             float(request.form.get('loa',0) or 0),
-            int(request.form.get('thruster_bas',0) or 0),
-            int(request.form.get('thruster_kic',0) or 0),
+            thruster_var = int(request.form.get('thruster_var', 0) or 0)
+            thruster_bas = int(request.form.get('thruster_kw', 0) or 0) if thruster_var else 0
+            thruster_kic = 0
             1 if request.form.get('tehlikeli_yuk') else 0,
             request.form.get('not_alani',''),
             request.form.get('from_liman',''),
