@@ -718,3 +718,28 @@ def operation_edit(op_id):
     ))
     db.commit()
     return 'ok', 200
+    db.execute("""
+        UPDATE operations SET
+            from_nokta=?, to_nokta=?,
+            off_station=?, pob=?, poff=?, on_station=?,
+            is_tipi=?, k_carpan=?,
+            fatigue_katki=?, fatigue_toplam=?, fatigue_norm=?, fatigue_durum=?
+        WHERE id=?
+    """, (
+        from_nokta, to_nokta,
+        off_st, pob, poff, on_st,
+        is_tipi, k,
+        katki, toplam, norm, durum,
+        op_id
+    ))
+    db.commit()
+    return 'ok', 200
+
+
+# ── Operation Sil ─────────────────────────────────────────────
+@app.route('/operations/<int:op_id>/sil', methods=['POST'])
+def operation_sil(op_id):
+    db = get_db()
+    db.execute("DELETE FROM operations WHERE id=?", (op_id,))
+    db.commit()
+    return 'ok', 200
