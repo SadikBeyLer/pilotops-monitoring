@@ -133,44 +133,44 @@ def index():
                    (SELECT v.gemi_adi FROM operations op2
                     JOIN vessels v ON v.id=op2.vessel_id
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_gemi,
                    (SELECT v.loa FROM operations op2
                     JOIN vessels v ON v.id=op2.vessel_id
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_loa,
                    (SELECT v.grt FROM operations op2
                     JOIN vessels v ON v.id=op2.vessel_id
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_grt,
                    (SELECT op2.from_nokta FROM operations op2
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_from,
                    (SELECT op2.to_nokta FROM operations op2
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_to,
                     (SELECT op2.off_station FROM operations op2
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_off_station,
  
                     (SELECT op2.pob FROM operations op2
-                     WHERE op2.pilot_id=p.id
-                     AND op2.on_station > datetime('now','-2 hours')
+                    WHERE op2.pilot_id=p.id
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_pob,
  
                     (SELECT op2.poff FROM operations op2
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_poff,
  
                     (SELECT op2.on_station FROM operations op2
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_on_station,
  
                    -- BT: thruster_bas veya thruster_kic varsa 1
@@ -178,7 +178,7 @@ def index():
                     FROM operations op2
                     JOIN vessels v ON v.id=op2.vessel_id
                     WHERE op2.pilot_id=p.id
-                    AND op2.on_station > datetime('now','-2 hours')
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_thruster,
                    -- MLC kontrol için toplam calisma
                    COALESCE(
@@ -198,7 +198,7 @@ def index():
         """, (watch['id'], watch['id'], watch['id'])).fetchall()
 
    # Dinlenme sonrası fatigue güncelle
-        now = datetime.utcnow()
+        now = datetime.now()
         pilots_list = []
         for p in pilots_raw:
             p = dict(p)
@@ -226,6 +226,14 @@ def index():
                     p['rest_hours'] = None
             else:
                 p['rest_hours'] = None
+            # Aktif iş varsa (on_station boş) R/H sıfırla
+            aktif_op = db.execute(
+                "SELECT id FROM operations WHERE pilot_id=? AND (on_station IS NULL OR on_station='')",
+                (p['pilot_id'],)
+            ).fetchone()
+            if aktif_op:
+                p['rest_hours'] = '0s'
+                p['son_fatigue_norm'] = p.get('son_fatigue_norm', 0)
             pilots_list.append(p)
         pilots_raw = sorted(pilots_list, key=lambda x: x['son_fatigue_norm'], reverse=True)
 
@@ -507,7 +515,7 @@ def operation_add():
         now = datetime.now()
         min_dt = datetime(now.year, now.month, now.day) - __import__('datetime').timedelta(days=1)
         max_dt = datetime(now.year, now.month, now.day) + __import__('datetime').timedelta(days=2)
-        for dt_str in [off_st, pob, poff, on_st]:
+        for dt_str in [x for x in [off_st, pob, poff, on_st] if x]:
             try:
                 dt_val = datetime.fromisoformat(dt_str)
                 if dt_val < min_dt or dt_val > max_dt:
@@ -538,7 +546,8 @@ def operation_add():
             (pilot_id,)
         ).fetchone()
         if prev:
-            rest_h = (datetime.fromisoformat(off_st)-datetime.fromisoformat(prev['on_station'])).total_seconds()/3600
+            prev_on = prev['on_station'] if prev['on_station'] else off_st
+            rest_h = (datetime.fromisoformat(off_st)-datetime.fromisoformat(prev_on)).total_seconds()/3600
             if rest_h < 0: rest_h = 0
             prev_score = apply_recovery(prev['fatigue_toplam'],rest_h)
         else:
@@ -623,10 +632,10 @@ def operation_edit(op_id):
 
     from_nokta = request.form.get('from_nokta', '').strip()
     to_nokta   = request.form.get('to_nokta', '').strip()
-    off_st     = request.form.get('off_station', '')
-    pob        = request.form.get('pob', '')
-    poff       = request.form.get('poff', '')
-    on_st      = request.form.get('on_station', '')
+    off_st= request.form.get('off_station', '').strip()
+    pob    = request.form.get('pob', '').strip()
+    poff   = request.form.get('poff', '').strip()
+    on_st  = request.form.get('on_station', '').strip()
 
     if not all([from_nokta, to_nokta, off_st, pob, poff, on_st]):
         return 'Eksik alan', 400
@@ -635,10 +644,11 @@ def operation_edit(op_id):
     is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
 
     base = off_st[:10] + 'T00:00:00'
+    base   = off_st[:10]+'T00:00:00'
     off_h  = dt_to_abs_hour(off_st, base)
-    pob_h  = dt_to_abs_hour(pob, base)
-    poff_h = dt_to_abs_hour(poff, base)
-    on_h   = dt_to_abs_hour(on_st, base)
+    pob_h  = dt_to_abs_hour(pob,   base) if pob   else off_h
+    poff_h = dt_to_abs_hour(poff,  base) if poff  else off_h
+    on_h   = dt_to_abs_hour(on_st, base) if on_st else off_h
 
     if pob_h  < off_h:  pob_h  += 24
     if poff_h < pob_h:  poff_h += 24
