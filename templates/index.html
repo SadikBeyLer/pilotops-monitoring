@@ -9,6 +9,17 @@
     <span style="background:#EAF3DE;color:#27500A;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:700">
       {{ watch.watch_no }} — Aktif
     </span>
+    {% if pilots %}
+    {% set total_jobs = pilots | sum(attribute='is_sayisi') %}
+    {% set avg_fatigue = (pilots | sum(attribute='son_fatigue_norm') / pilots | length) | round | int %}
+    {% set avg_durum = 'FIT' if avg_fatigue < 50 else ('DİKKAT' if avg_fatigue < 75 else ('YORGUN' if avg_fatigue < 90 else 'UNFIT')) %}
+    {% set avg_color = '#1a7a2e' if avg_fatigue < 50 else ('#b85c00' if avg_fatigue < 75 else '#c0152a') %}
+    <span style="margin-left:32px;font-size:13px;color:#555;font-weight:600">
+      Total Jobs: <strong>{{ total_jobs }}</strong>
+    </span>
+    <span style="margin-left:24px;font-size:13px;color:#555;font-weight:600">
+      Avg Fatigue: <strong style="color:{{ avg_color }}">{{ avg_fatigue }} — {{ avg_durum }}</strong>
+    </span>
     {% endif %}
   </div>
 </div>
