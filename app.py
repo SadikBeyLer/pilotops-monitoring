@@ -180,6 +180,11 @@ def index():
                     WHERE op2.pilot_id=p.id
                     AND (op2.on_station IS NULL OR op2.on_station = '')
                     ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_thruster,
+                    (SELECT v.tug_adet FROM operations op2
+                    JOIN vessels v ON v.id=op2.vessel_id
+                    WHERE op2.pilot_id=p.id
+                    AND (op2.on_station IS NULL OR op2.on_station = '')
+                    ORDER BY op2.olusturma DESC LIMIT 1) AS aktif_tug,
                    -- MLC kontrol için toplam calisma
                    COALESCE(
                      (SELECT ROUND(SUM((strftime('%s',on_station)-strftime('%s',off_station))/3600.0),2)

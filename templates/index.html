@@ -93,7 +93,7 @@
     <td style="padding:8px 10px;min-width:280px;text-align:center">
       {% if p.aktif_gemi %}
       <div style="display:inline-block;text-align:left">
-        {# Satır 1: Gemi · Loa · Gt · Fr · To · BT #}
+        {# Satır 1: Gemi · Loa · Gt · BT · Tug #}
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span style="font-size:14px;font-weight:700;color:#185FA5;text-transform:uppercase">{{ p.aktif_gemi }}</span>
           <span style="color:#ddd;font-size:11px">·</span>
@@ -101,20 +101,19 @@
           <span style="color:#ddd;font-size:11px">·</span>
           <span style="font-size:11px;color:#999">Gt: {{ p.aktif_grt|int if p.aktif_grt else '—' }}</span>
           <span style="color:#ddd;font-size:11px">·</span>
-          {% set fd = 'Plt.Psn' if p.aktif_from and p.aktif_from|lower == 'pilot position' else (p.aktif_from or '—') %}
-          {% set td = 'Plt.Psn' if p.aktif_to and p.aktif_to|lower == 'pilot position' else (p.aktif_to or '—') %}
+          <span style="font-size:11px;color:#999">BT: <span style="color:{% if p.aktif_thruster %}#1a7a2e;font-weight:700{% else %}#aaa{% endif %}">{% if p.aktif_thruster %}Yes{% else %}No{% endif %}</span></span>
+          <span style="color:#ddd;font-size:11px">·</span>
+          <span style="font-size:11px;color:#999">Tug: <span style="color:#555">{{ p.aktif_tug if p.aktif_tug else '0' }}</span></span>
+        </div>
+        {# Satır 2: Fr · To · 4 saat #}
+        {% if p.aktif_off_station %}
+        {% set d = p.aktif_off_station %}
+        {% set fd = 'Plt.Psn' if p.aktif_from and p.aktif_from|lower == 'pilot position' else (p.aktif_from or '—') %}
+        {% set td = 'Plt.Psn' if p.aktif_to and p.aktif_to|lower == 'pilot position' else (p.aktif_to or '—') %}
+        <div style="margin-top:4px;display:flex;align-items:center;gap:7px;flex-wrap:wrap">
           <span style="font-size:11px;color:#999">Fr: <span style="color:#555">{{ fd }}</span></span>
           <span style="color:#ddd;font-size:11px">·</span>
           <span style="font-size:11px;color:#999">To: <span style="color:#555">{{ td }}</span></span>
-          <span style="color:#ddd;font-size:11px">·</span>
-          <span style="font-size:11px;color:#999">BT: <span style="color:{% if p.aktif_thruster %}#1a7a2e;font-weight:700{% else %}#aaa{% endif %}">{% if p.aktif_thruster %}Yes{% else %}No{% endif %}</span></span>
-        </div>
-        {# Satır 2: Date + 4 saat #}
-        {% if p.aktif_off_station %}
-        {% set d = p.aktif_off_station %}
-        {% set tarih = d[8:10] ~ '-' ~ d[5:7] ~ '-' ~ d[0:4] %}
-        <div style="margin-top:4px;display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <span style="font-size:11px;color:#888;font-weight:600">Date: {{ tarih }}</span>
           <span style="color:#ddd;font-size:11px">·</span>
           <span style="font-size:11px;color:#555">Off St: <span style="font-weight:600">{{ d[11:13] }}{{ d[14:16] }}</span></span>
           <span style="color:#ddd;font-size:11px">·</span>
