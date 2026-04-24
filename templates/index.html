@@ -316,11 +316,13 @@ function startEdit(id, from, to, off, pob, poff, on) {
       el.style.color = '#bbb';
       el.style.fontWeight = '400';
     }
-    // Kullanıcı değiştirince koyu yap
-    el.oninput = function() {
-      el.style.color = '#1a1a1a';
-      el.style.fontWeight = '600';
-    };
+    // Closure sorununu önlemek için IIFE ile el'i yakala
+    (function(input) {
+      input.oninput = function() {
+        input.style.color = '#1a1a1a';
+        input.style.fontWeight = '600';
+      };
+    })(el);
   }
 
   fillInput('edit-off-'  + id, off);
@@ -338,11 +340,17 @@ function cancelEdit(id) {
 }
 
 function saveJob(id) {
+  function getVal(elId) {
+    var el = document.getElementById(elId);
+    // Silik ise (operator girmemiş) boş gönder
+    if (el.style.color === 'rgb(187, 187, 187)' || el.style.color === '#bbb') return '';
+    return el.value;
+  }
   var data = new FormData();
-  data.append('off_station', document.getElementById('edit-off-'  + id).value);
-  data.append('pob',         document.getElementById('edit-pob-'  + id).value);
-  data.append('poff',        document.getElementById('edit-poff-' + id).value);
-  data.append('on_station',  document.getElementById('edit-on-'   + id).value);
+  data.append('off_station', getVal('edit-off-'  + id));
+  data.append('pob',         getVal('edit-pob-'  + id));
+  data.append('poff',        getVal('edit-poff-' + id));
+  data.append('on_station',  getVal('edit-on-'   + id));
   fetch('/operations/' + id + '/edit', { method: 'POST', body: data })
     .then(function(r) {
       if (r.ok) { location.reload(); }

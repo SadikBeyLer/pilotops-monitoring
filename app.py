@@ -635,20 +635,24 @@ def operation_edit(op_id):
     if not op:
         return 'İş bulunamadı', 404
 
-    from_nokta = op['from_nokta']
-    to_nokta   = op['to_nokta']
-    off_st= request.form.get('off_station', '').strip()
+    off_st = request.form.get('off_station', '').strip()
     pob    = request.form.get('pob', '').strip()
     poff   = request.form.get('poff', '').strip()
     on_st  = request.form.get('on_station', '').strip()
 
-    if not all([off_st, pob, poff, on_st]):
-        return 'Eksik alan', 400
+    if not off_st:
+        return 'Off Station zorunludur', 400
+
+    # Boş gelmişse veritabanındaki mevcut değeri koru
+    from_nokta = op['from_nokta']
+    to_nokta   = op['to_nokta']
+    pob   = pob   if pob   else (op['pob']        or '')
+    poff  = poff  if poff  else (op['poff']       or '')
+    on_st = on_st if on_st else (op['on_station'] or '')
 
     # Fatigue yeniden hesapla
     is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
 
-    base = off_st[:10] + 'T00:00:00'
     base   = off_st[:10]+'T00:00:00'
     off_h  = dt_to_abs_hour(off_st, base)
     pob_h  = dt_to_abs_hour(pob,   base) if pob   else off_h
