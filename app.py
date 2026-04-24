@@ -681,6 +681,7 @@ def operation_edit(op_id):
             return 'On Station, POB\'dan önce olamaz', 400
         if on_st and not poff and not pob and datetime.fromisoformat(on_st) < datetime.fromisoformat(off_st):
             return 'On Station, Off Station\'dan önce olamaz', 400
+        is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
 
     if off_st and pob and poff and on_st:
         base   = off_st[:10]+'T00:00:00'
