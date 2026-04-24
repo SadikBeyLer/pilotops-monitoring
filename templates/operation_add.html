@@ -1,12 +1,14 @@
 {% extends 'base.html' %}
 {% block title %}İş Girişi — PilotOps{% endblock %}
 {% block content %}
+
 <div class="page-header">
   <div class="page-title">Yeni iş girişi</div>
   <a href="/" class="btn btn-secondary">← Geri</a>
 </div>
+
 <form method="POST" id="op-form">
-  {% if hata %}
+{% if hata %}
 <div style="margin-bottom:16px;padding:10px 14px;border-radius:8px;background:#FCEBEB;color:#791F1F;font-size:13px;font-weight:600">⚠️ {{ hata }}</div>
 {% endif %}
 
@@ -100,26 +102,43 @@
 <div class="section">
   <div class="section-title">Saatler</div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #e0e0e0;border-radius:8px;overflow:hidden">
+
+    <!-- OFF STATION — zorunlu -->
     <div style="padding:10px 12px;border-right:1px solid #e0e0e0">
-      <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:5px">OFF STATION</div>
-      <input type="datetime-local" name="off_station" id="t-off" required style="border:none;background:transparent;font-size:13px;width:100%;padding:0" oninput="calcSure()">
+      <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:5px">OFF STATION <span style="color:#c0152a">*</span></div>
+      <input type="datetime-local" name="off_station" id="t-off" required
+        style="border:none;background:transparent;font-size:13px;width:100%;padding:0;color:#bbb"
+        oninput="onManualInput(this,'t-off'); calcSure()">
       <div style="font-size:10px;color:#bbb;margin-top:3px">İstasyondan çıkış</div>
     </div>
+
+    <!-- POB — opsiyonel -->
     <div style="padding:10px 12px;border-right:1px solid #e0e0e0;background:#EEF5FF">
       <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:5px">POB</div>
-      <input type="datetime-local" name="pob" id="t-pob" required style="border:none;background:transparent;font-size:13px;width:100%;padding:0;color:#0C447C;font-weight:500" oninput="calcSure()">
+      <input type="datetime-local" name="pob" id="t-pob"
+        style="border:none;background:transparent;font-size:13px;width:100%;padding:0;color:#bbb;font-weight:400"
+        oninput="onManualInput(this,'t-pob'); calcSure()">
       <div style="font-size:10px;color:#85B7EB;margin-top:3px">Gemiye çıkış</div>
     </div>
+
+    <!-- P.OFF — opsiyonel -->
     <div style="padding:10px 12px;border-right:1px solid #e0e0e0;background:#EEF5FF">
       <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:5px">P.OFF</div>
-      <input type="datetime-local" name="poff" id="t-poff" required style="border:none;background:transparent;font-size:13px;width:100%;padding:0;color:#0C447C;font-weight:500" oninput="calcSure()">
+      <input type="datetime-local" name="poff" id="t-poff"
+        style="border:none;background:transparent;font-size:13px;width:100%;padding:0;color:#bbb;font-weight:400"
+        oninput="onManualInput(this,'t-poff'); calcSure()">
       <div style="font-size:10px;color:#85B7EB;margin-top:3px">Gemiden iniş</div>
     </div>
+
+    <!-- ON STATION — opsiyonel -->
     <div style="padding:10px 12px">
       <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:5px">ON STATION</div>
-      <input type="datetime-local" name="on_station" id="t-on" required style="border:none;background:transparent;font-size:13px;width:100%;padding:0" oninput="calcSure()">
+      <input type="datetime-local" name="on_station" id="t-on"
+        style="border:none;background:transparent;font-size:13px;width:100%;padding:0;color:#bbb"
+        oninput="onManualInput(this,'t-on'); calcSure()">
       <div style="font-size:10px;color:#bbb;margin-top:3px">İstasyona dönüş</div>
     </div>
+
   </div>
   <div id="sure-info" style="display:flex;gap:16px;margin-top:8px;font-size:12px;color:#888">
     <span>Transfer: <strong id="s-trans">—</strong></span>
@@ -162,16 +181,71 @@
 var SAMANDIRALAR = {{ samandiralar | tojson }};
 var currentFatigue = 0;
 var currentK = 1.0;
+// Manuel girilen inputları takip et
+var manualInputs = {};
+
+function addMinutes(dateStr, mins) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr);
+  d.setMinutes(d.getMinutes() + mins);
+  var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+         'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+
+function onManualInput(el, id) {
+  el.dataset.manual = '1';
+  el.style.color = '#1a1a1a';
+  el.style.fontWeight = '600';
+  if (id === 't-off') updateOptionalTimes();
+}
+
+function updateOptionalTimes() {
+  var offVal = document.getElementById('t-off').value;
+  if (!offVal) return;
+  var pobEl  = document.getElementById('t-pob');
+  var poffEl = document.getElementById('t-poff');
+  var onEl   = document.getElementById('t-on');
+  if (pobEl.dataset.manual  !== '1') { pobEl.value  = addMinutes(offVal, 20); pobEl.style.color  = '#bbb'; }
+  if (poffEl.dataset.manual !== '1') { poffEl.value = addMinutes(offVal, 60); poffEl.style.color = '#bbb'; }
+  if (onEl.dataset.manual   !== '1') { onEl.value   = addMinutes(offVal, 80); onEl.style.color   = '#bbb'; }
+  calcSure();
+}
 
 document.addEventListener('DOMContentLoaded', function(){
   var now = new Date();
   var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
-  var str = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-  document.getElementById('t-off').value  = str;
-  document.getElementById('t-pob').value  = str;
-  document.getElementById('t-poff').value = str;
-  document.getElementById('t-on').value   = str;
+  var str = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
+            'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+
+  // Off station: silik goster
+  var offEl = document.getElementById('t-off');
+  offEl.value = str;
+  offEl.style.color = '#bbb';
+
+  // POB/POff/On: oneri deger silik, manuel degil
+  setOptional('t-pob',  addMinutes(str, 20));
+  setOptional('t-poff', addMinutes(str, 60));
+  setOptional('t-on',   addMinutes(str, 80));
+
+  calcSure();
+
+  // Submit oncesi: manuel girilmemis saatleri bos gonder
+  document.getElementById('op-form').addEventListener('submit', function(){
+    ['t-pob','t-poff','t-on'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el.dataset.manual !== '1') el.value = '';
+    });
+  });
 });
+
+function setOptional(id, val) {
+  var el = document.getElementById(id);
+  el.value = val;
+  el.style.color = '#bbb';
+  el.style.fontWeight = '400';
+  el.dataset.manual = '0';
+}
 
 function isSam(s){ return SAMANDIRALAR.some(function(sam){ return s.toLowerCase().includes(sam); }); }
 
@@ -189,30 +263,30 @@ function detectTip(){
   var box=document.getElementById('tip-box');
   box.style.display='flex';
   var badge=document.getElementById('tip-badge');
-  badge.textContent=label;badge.style.background=bg;badge.style.color=color;
+  badge.textContent=label; badge.style.background=bg; badge.style.color=color;
   document.getElementById('tip-k').textContent='k = '+k.toFixed(2);
   updateFatigue();
 }
 
 function loadFatigue(pid){
-  if(!pid)return;
+  if(!pid) return;
   fetch('/api/pilot/'+pid+'/fatigue')
-    .then(function(r){return r.json();})
+    .then(function(r){ return r.json(); })
     .then(function(d){
-      currentFatigue=d.norm||0;
-      document.getElementById('f-onceki').textContent=(d.norm||0)+'/100';
+      currentFatigue = d.norm || 0;
+      document.getElementById('f-onceki').textContent = (d.norm||0)+'/100';
       updateFatigue();
     });
 }
 
 function dt(id){
-  var v=document.getElementById(id).value;
-  if(!v)return null;
+  var v = document.getElementById(id).value;
+  if(!v) return null;
   return new Date(v);
 }
 
 function calcSure(){
-  var off=dt('t-off'),pob=dt('t-pob'),poff=dt('t-poff'),on=dt('t-on');
+  var off=dt('t-off'), pob=dt('t-pob'), poff=dt('t-poff'), on=dt('t-on');
   if(off&&pob&&poff&&on){
     var transMs=(pob-off)+(on-poff);
     var gemiMs=poff-pob;
@@ -226,13 +300,13 @@ function calcSure(){
 
 function fmtMs(ms){
   var m=Math.round(ms/60000);
-  var h=Math.floor(m/60),mn=m%60;
-  return h>0?h+'s '+(mn>0?mn+'dk':''):mn+'dk';
+  var h=Math.floor(m/60), mn=m%60;
+  return h>0 ? h+'s '+(mn>0?mn+'dk':'') : mn+'dk';
 }
 
 function updateFatigue(){
-  var off=dt('t-off'),pob=dt('t-pob'),poff=dt('t-poff'),on=dt('t-on');
-  if(!off||!pob||!poff||!on)return;
+  var off=dt('t-off'), pob=dt('t-pob'), poff=dt('t-poff'), on=dt('t-on');
+  if(!off||!pob||!poff||!on) return;
   var gemiH=(poff-pob)/3600000;
   if(gemiH<=0){
     document.getElementById('f-katki').textContent='—';
@@ -256,4 +330,5 @@ function updateFatigue(){
   else{uw.style.display='none';}
 }
 </script>
+
 {% endblock %}
