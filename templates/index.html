@@ -208,25 +208,30 @@
               <span style="color:#bbb;margin-left:6px">— saatleri düzenle</span>
             </td>
             {# 4 saat inputu #}
-            <td style="padding:5px 4px">
-              <div style="font-size:10px;color:#888;margin-bottom:2px">Off St.</div>
-              <input id="edit-off-{{ j.id }}" type="datetime-local"
-                style="width:130px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px;color:#bbb">
-            </td>
-            <td style="padding:5px 4px">
-              <div style="font-size:10px;color:#185FA5;margin-bottom:2px">POB</div>
-              <input id="edit-pob-{{ j.id }}" type="datetime-local"
-                style="width:130px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px;color:#bbb">
-            </td>
-            <td style="padding:5px 4px">
-              <div style="font-size:10px;color:#185FA5;margin-bottom:2px">P.Off</div>
-              <input id="edit-poff-{{ j.id }}" type="datetime-local"
-                style="width:130px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px;color:#bbb">
-            </td>
-            <td style="padding:5px 4px">
-              <div style="font-size:10px;color:#888;margin-bottom:2px">On St.</div>
-              <input id="edit-on-{{ j.id }}" type="datetime-local"
-                style="width:130px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px;color:#bbb">
+            {# 4 saat — tek hücrede yan yana, kesme olmaz #}
+            <td colspan="4" style="padding:5px 8px">
+              <div style="display:flex;gap:6px;align-items:flex-end">
+                <div>
+                  <div style="font-size:10px;color:#888;margin-bottom:2px">Off St.</div>
+                  <input id="edit-off-{{ j.id }}" type="datetime-local"
+                    style="padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px;color:#bbb;min-width:0;width:170px">
+                </div>
+                <div>
+                  <div style="font-size:10px;color:#185FA5;margin-bottom:2px">POB</div>
+                  <input id="edit-pob-{{ j.id }}" type="datetime-local"
+                    style="padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px;color:#bbb;min-width:0;width:170px">
+                </div>
+                <div>
+                  <div style="font-size:10px;color:#185FA5;margin-bottom:2px">P.Off</div>
+                  <input id="edit-poff-{{ j.id }}" type="datetime-local"
+                    style="padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px;color:#bbb;min-width:0;width:170px">
+                </div>
+                <div>
+                  <div style="font-size:10px;color:#888;margin-bottom:2px">On St.</div>
+                  <input id="edit-on-{{ j.id }}" type="datetime-local"
+                    style="padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px;color:#bbb;min-width:0;width:170px">
+                </div>
+              </div>
             </td>
             {# Kaydet/İptal — BT+Fatigue+Aksiyon = 3 sütun birleşik #}
             <td colspan="3" style="padding:5px 10px;text-align:center;white-space:nowrap">
