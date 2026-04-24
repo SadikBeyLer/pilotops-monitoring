@@ -643,51 +643,45 @@ def operation_edit(op_id):
     if not off_st:
         return 'Off Station zorunludur', 400
 
-    # Boş gelmişse veritabanındaki mevcut değeri koru
     from_nokta = op['from_nokta']
     to_nokta   = op['to_nokta']
     pob   = pob   if pob   else (op['pob']        or '')
     poff  = poff  if poff  else (op['poff']       or '')
     on_st = on_st if on_st else (op['on_station'] or '')
 
-    # Fatigue yeniden hesapla — sadece 4 saat de doluysa
+    is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
+
     if off_st and pob and poff and on_st:
-        is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
         base   = off_st[:10]+'T00:00:00'
         off_h  = dt_to_abs_hour(off_st, base)
         pob_h  = dt_to_abs_hour(pob,   base)
         poff_h = dt_to_abs_hour(poff,  base)
         on_h   = dt_to_abs_hour(on_st, base)
-
         if pob_h  < off_h:  pob_h  += 24
         if poff_h < pob_h:  poff_h += 24
         if on_h   < poff_h: on_h   += 24
-
         vessel = db.execute("SELECT grt FROM vessels WHERE id=?", (op['vessel_id'],)).fetchone()
         grt = vessel['grt'] if vessel else 8000
         katki = job_contrib(off_h, pob_h, poff_h, on_h, is_tipi, grt)
+        prev = db.execute(
+            "SELECT fatigue_toplam, on_station FROM operations WHERE pilot_id=? AND id!=? ORDER BY olusturma DESC LIMIT 1",
+            (op['pilot_id'], op_id)
+        ).fetchone()
+        if prev:
+            prev_on = prev['on_station'] if prev['on_station'] else off_st
+            rest_h = (datetime.fromisoformat(off_st) - datetime.fromisoformat(prev_on)).total_seconds() / 3600
+            if rest_h < 0: rest_h = 0
+            prev_score = apply_recovery(prev['fatigue_toplam'], rest_h)
+        else:
+            prev_score = 0.0
+        toplam = prev_score + katki
+        norm   = normalize_score(toplam)
+        _, durum = fatigue_color(toplam)
     else:
         katki  = op['fatigue_katki']  or 0
         toplam = op['fatigue_toplam'] or 0
         norm   = op['fatigue_norm']   or 0
         durum  = op['fatigue_durum']  or 'FIT'
-
-    # Bir önceki işi bul (bu iş hariç)
-    prev = db.execute(
-        "SELECT fatigue_toplam, on_station FROM operations WHERE pilot_id=? AND id!=? ORDER BY olusturma DESC LIMIT 1",
-        (op['pilot_id'], op_id)
-    ).fetchone()
-
-    if prev:
-        rest_h = (datetime.fromisoformat(off_st) - datetime.fromisoformat(prev['on_station'])).total_seconds() / 3600
-        if rest_h < 0: rest_h = 0
-        prev_score = apply_recovery(prev['fatigue_toplam'], rest_h)
-    else:
-        prev_score = 0.0
-
-    toplam = prev_score + katki
-    norm   = normalize_score(toplam)
-    _, durum = fatigue_color(toplam)
 
     db.execute("""
         UPDATE operations SET
@@ -705,23 +699,3 @@ def operation_edit(op_id):
     ))
     db.commit()
     return 'ok', 200
-
-
-# ── Operation Sil ─────────────────────────────────────────────
-@app.route('/operations/<int:op_id>/sil', methods=['POST'])
-def operation_sil(op_id):
-    db = get_db()
-    db.execute("DELETE FROM operations WHERE id=?", (op_id,))
-    db.commit()
-    return 'ok', 200
-
-if __name__ == '__main__':
-    if not os.path.exists(DATABASE):
-        init_db()
-        print(f"Veritabanı oluşturuldu: {DATABASE}")
-    app.run(debug=True, port=5001)
-
-with app.app_context():
-    if not os.path.exists(DATABASE):
-        init_db()
-    migrate_vessels()
