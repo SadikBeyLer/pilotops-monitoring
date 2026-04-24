@@ -316,6 +316,11 @@ function startEdit(id, from, to, off, pob, poff, on) {
       el.style.color = '#bbb';
       el.style.fontWeight = '400';
     }
+    // Kullanıcı değiştirince koyu yap
+    el.oninput = function() {
+      el.style.color = '#1a1a1a';
+      el.style.fontWeight = '600';
+    };
   }
 
   fillInput('edit-off-'  + id, off);
