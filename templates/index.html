@@ -202,29 +202,34 @@
 
           {# Inline edit satırı — başlangıçta gizli #}
           <tr id="job-edit-{{ j.id }}" style="display:none;background:#EEF4FF;border-top:1px solid #c8d8f0">
-            <td style="padding:6px 10px;color:#bbb;font-size:12px">{{ loop.index }}</td>
-            <td style="padding:6px 10px;font-weight:700;color:#1a1a1a;text-transform:uppercase;font-size:12px">{{ j.gemi_adi }}</td>
-            <td style="padding:6px 10px;color:#888;font-size:12px">
-              {% if j.loa %}{{ j.loa|int }}{% endif %}
-              {% if j.loa and j.grt %} / {% endif %}
-              {% if j.grt %}{{ j.grt|int }}{% endif %}
+            {# Sol: No + Gemi + Loa + Fr/To + Tarih = 5 sütun birleşik #}
+            <td colspan="5" style="padding:6px 10px;font-size:12px;color:#888">
+              <span style="font-weight:700;color:#1a1a1a;text-transform:uppercase">{{ j.gemi_adi }}</span>
+              <span style="color:#bbb;margin-left:6px">— saatleri düzenle</span>
             </td>
-            <td style="padding:5px 8px" colspan="2">
-              <div style="display:flex;align-items:center;gap:3px">
-                <input id="edit-from-{{ j.id }}" type="text" placeholder="Fr"
-                  style="width:80px;padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px">
-                <span style="color:#aaa;font-size:10px">→</span>
-                <input id="edit-to-{{ j.id }}" type="text" placeholder="To"
-                  style="width:80px;padding:3px 5px;border:1px solid #9ab;border-radius:4px;font-size:12px">
-              </div>
+            {# 4 saat inputu #}
+            <td style="padding:5px 4px">
+              <div style="font-size:10px;color:#888;margin-bottom:2px">Off St.</div>
+              <input id="edit-off-{{ j.id }}" type="datetime-local"
+                style="width:130px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px;color:#bbb">
             </td>
-            <td style="padding:5px 6px"><input id="edit-off-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
-            <td style="padding:5px 6px"><input id="edit-pob-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
-            <td style="padding:5px 6px"><input id="edit-poff-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
-            <td style="padding:5px 6px"><input id="edit-on-{{ j.id }}" type="datetime-local" style="width:135px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px"></td>
-            <td></td>
-            <td></td>
-            <td style="padding:5px 10px;text-align:center;white-space:nowrap">
+            <td style="padding:5px 4px">
+              <div style="font-size:10px;color:#185FA5;margin-bottom:2px">POB</div>
+              <input id="edit-pob-{{ j.id }}" type="datetime-local"
+                style="width:130px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px;color:#bbb">
+            </td>
+            <td style="padding:5px 4px">
+              <div style="font-size:10px;color:#185FA5;margin-bottom:2px">P.Off</div>
+              <input id="edit-poff-{{ j.id }}" type="datetime-local"
+                style="width:130px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px;color:#bbb">
+            </td>
+            <td style="padding:5px 4px">
+              <div style="font-size:10px;color:#888;margin-bottom:2px">On St.</div>
+              <input id="edit-on-{{ j.id }}" type="datetime-local"
+                style="width:130px;padding:3px 4px;border:1px solid #9ab;border-radius:4px;font-size:11px;color:#bbb">
+            </td>
+            {# Kaydet/İptal — BT+Fatigue+Aksiyon = 3 sütun birleşik #}
+            <td colspan="3" style="padding:5px 10px;text-align:center;white-space:nowrap">
               <button onclick="event.stopPropagation();saveJob({{ j.id }})"
                 style="background:#185FA5;border:none;border-radius:5px;padding:4px 10px;font-size:12px;color:#fff;cursor:pointer;margin-right:3px">✓</button>
               <button onclick="event.stopPropagation();cancelEdit({{ j.id }})"
@@ -290,16 +295,29 @@ function toggleJobs(pilotId, row) {
 
 // ── Inline Edit ────────────────────────────────────────────
 function startEdit(id, from, to, off, pob, poff, on) {
-  function toLocal(s) {
-    if (!s) return '';
-    return s.length >= 16 ? s.substring(0, 16) : s;
+  var now = new Date();
+  var pad = function(n){ return n < 10 ? '0' + n : '' + n; };
+  var nowStr = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
+               'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+
+  function fillInput(elId, val) {
+    var el = document.getElementById(elId);
+    if (val && val.length >= 16) {
+      el.value = val.substring(0, 16);
+      el.style.color = '#1a1a1a';
+      el.style.fontWeight = '600';
+    } else {
+      el.value = nowStr;
+      el.style.color = '#bbb';
+      el.style.fontWeight = '400';
+    }
   }
-  document.getElementById('edit-from-' + id).value  = from;
-  document.getElementById('edit-to-' + id).value    = to;
-  document.getElementById('edit-off-' + id).value   = toLocal(off);
-  document.getElementById('edit-pob-' + id).value   = toLocal(pob);
-  document.getElementById('edit-poff-' + id).value  = toLocal(poff);
-  document.getElementById('edit-on-' + id).value    = toLocal(on);
+
+  fillInput('edit-off-'  + id, off);
+  fillInput('edit-pob-'  + id, pob);
+  fillInput('edit-poff-' + id, poff);
+  fillInput('edit-on-'   + id, on);
+
   document.getElementById('job-view-' + id).style.display = 'none';
   document.getElementById('job-edit-' + id).style.display = 'table-row';
 }
@@ -311,12 +329,10 @@ function cancelEdit(id) {
 
 function saveJob(id) {
   var data = new FormData();
-  data.append('from_nokta',  document.getElementById('edit-from-' + id).value);
-  data.append('to_nokta',    document.getElementById('edit-to-' + id).value);
-  data.append('off_station', document.getElementById('edit-off-' + id).value);
-  data.append('pob',         document.getElementById('edit-pob-' + id).value);
+  data.append('off_station', document.getElementById('edit-off-'  + id).value);
+  data.append('pob',         document.getElementById('edit-pob-'  + id).value);
   data.append('poff',        document.getElementById('edit-poff-' + id).value);
-  data.append('on_station',  document.getElementById('edit-on-' + id).value);
+  data.append('on_station',  document.getElementById('edit-on-'   + id).value);
   fetch('/operations/' + id + '/edit', { method: 'POST', body: data })
     .then(function(r) {
       if (r.ok) { location.reload(); }
