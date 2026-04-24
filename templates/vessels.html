@@ -187,7 +187,7 @@
 {# ── Gemi Ekle Modal ── #}
 <div id="gemi-ekle-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center">
   <div style="background:#f5f7fa;border-radius:14px;width:100%;max-width:740px;max-height:92vh;overflow-y:auto;
-              box-shadow:0 12px 48px rgba(0,0,0,.22);padding:28px 32px;position:relative">
+              box-shadow:0 12px 48px rgba(0,0,0,.22);padding:20px 28px;position:relative">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div style="font-size:18px;font-weight:800;color:#1a1a1a">Yeni Gemi</div>
       <button onclick="kapat()" style="font-size:20px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px">✕</button>
@@ -242,7 +242,7 @@
             <input type="number" name="loa" step="0.1" autocomplete="off">
           </div>
           <div class="form-group">
-            <label>BT (Bow Thruster)</label>
+            <label>BT</label>
             <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
               <select name="thruster_var" id="m-thr-var" onchange="mThrToggle()"
                 style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 8px;font-size:14px">
@@ -258,28 +258,34 @@
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:4px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px">
           <div class="form-group">
-            <label>F/A Draft (m)</label>
-            <div style="display:flex;align-items:center;gap:8px">
-              <input type="number" name="draft_bas" step="0.01" min="0" max="25" autocomplete="off"
-                style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px">
-              <span style="color:#aaa;font-weight:600">/</span>
-              <input type="number" name="draft_kic" step="0.01" min="0" max="25" autocomplete="off"
-                style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label style="font-size:11px">Fwd Draft (m)</label>
+                <input type="number" name="draft_bas" step="0.01" min="0" max="25" autocomplete="off"
+                  style="width:100%;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px">
+              </div>
+              <div>
+                <label style="font-size:11px">Aft Draft (m)</label>
+                <input type="number" name="draft_kic" step="0.01" min="0" max="25" autocomplete="off"
+                  style="width:100%;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px">
+              </div>
             </div>
           </div>
-          <div class="form-group">
-            <label>Tug</label>
-            <div style="display:flex;align-items:center;gap:8px">
+          <div class="form-group" style="display:flex;flex-direction:column;align-items:flex-end">
+            <label style="align-self:flex-start">Tug</label>
+            <div style="display:flex;align-items:flex-end;gap:8px;width:100%">
               <select name="tug_var" id="m-tug-var" onchange="mTugToggle()"
                 style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 8px;font-size:15px">
                 <option value="0">Yok</option>
                 <option value="1">Var</option>
               </select>
-              <span style="color:#aaa;font-weight:600">/</span>
-              <input type="number" name="tug_adet" id="m-tug-adet" min="0" max="9" disabled autocomplete="off"
-                style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px;background:#f5f5f5;color:#aaa">
+              <div style="flex:1">
+                <label style="font-size:10px;color:#aaa;font-weight:600;display:block;margin-bottom:2px">Adet</label>
+                <input type="number" name="tug_adet" id="m-tug-adet" min="0" max="9" disabled autocomplete="off"
+                  style="width:100%;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px;background:#f5f5f5;color:#aaa">
+              </div>
             </div>
           </div>
           <div class="form-group">
