@@ -11,7 +11,9 @@
     </span>
     {% if pilots %}
     {% set total_jobs = pilots | sum(attribute='is_sayisi') %}
-    {% set avg_fatigue = (pilots | sum(attribute='son_fatigue_norm') / pilots | length) | round | int %}
+    {% set pilot_count = pilots | length %}
+    {% set fatigue_sum = pilots | sum(attribute='son_fatigue_norm') %}
+    {% set avg_fatigue = (fatigue_sum / pilot_count) | round | int if pilot_count > 0 else 0 %}
     {% set avg_durum = 'FIT' if avg_fatigue < 50 else ('DİKKAT' if avg_fatigue < 75 else ('YORGUN' if avg_fatigue < 90 else 'UNFIT')) %}
     {% set avg_color = '#1a7a2e' if avg_fatigue < 50 else ('#b85c00' if avg_fatigue < 75 else '#c0152a') %}
     <span style="margin-left:32px;font-size:13px;color:#555;font-weight:600">
