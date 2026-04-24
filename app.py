@@ -530,6 +530,17 @@ def operation_add():
             except Exception:
                 pass
 
+        # Önceki iş bitiş kontrolü
+        prev_bitis = db.execute(
+            "SELECT on_station FROM operations WHERE pilot_id=? AND on_station IS NOT NULL AND on_station != '' ORDER BY on_station DESC LIMIT 1",
+            (pilot_id,)
+        ).fetchone()
+        if prev_bitis:
+            if datetime.fromisoformat(off_st) < datetime.fromisoformat(prev_bitis['on_station']):
+                return render_template('operation_add.html', pilots=pilots, vessels=vessels,
+                    samandiralar=SAMANDIRALAR,
+                    hata='Off Station, önceki işin bitiş saatinden (' + prev_bitis['on_station'][11:16] + ') önce olamaz.')
+        
         is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
         watch = db.execute(
             "SELECT id FROM watches WHERE aktif=1 ORDER BY baslangic DESC LIMIT 1"
@@ -649,6 +660,14 @@ def operation_edit(op_id):
     poff  = poff  if poff  else (op['poff']       or '')
     on_st = on_st if on_st else (op['on_station'] or '')
 
+    # Önceki iş bitiş kontrolü
+    prev_bitis = db.execute(
+        "SELECT on_station FROM operations WHERE pilot_id=? AND id!=? AND on_station IS NOT NULL AND on_station != '' ORDER BY on_station DESC LIMIT 1",
+        (op['pilot_id'], op_id)
+    ).fetchone()
+    if prev_bitis:
+        if datetime.fromisoformat(off_st) < datetime.fromisoformat(prev_bitis['on_station']):
+            return 'Off Station önceki işin bitiş saatinden (' + prev_bitis['on_station'][11:16] + ') önce olamaz', 400
     is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
 
     if off_st and pob and poff and on_st:
