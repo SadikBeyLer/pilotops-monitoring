@@ -3,7 +3,7 @@
 {% block content %}
 
 <div class="page-header">
-  <div style="display:flex;align-items:center;gap:12px">
+  <div style="display:flex;align-items:center;gap:12px;width:100%"></div>
     <div class="page-title">Live Ops</div>
     {% if watch %}
     <span style="background:#EAF3DE;color:#27500A;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:700">
@@ -16,12 +16,14 @@
     {% set avg_fatigue = (fatigue_sum / pilot_count) | round | int if pilot_count > 0 else 0 %}
     {% set avg_durum = 'FIT' if avg_fatigue < 50 else ('DİKKAT' if avg_fatigue < 75 else ('YORGUN' if avg_fatigue < 90 else 'UNFIT')) %}
     {% set avg_color = '#1a7a2e' if avg_fatigue < 50 else ('#b85c00' if avg_fatigue < 75 else '#c0152a') %}
-    <span style="margin-left:auto;font-size:13px;color:#555;font-weight:600">
-      Total Jobs: <strong style="color:#185FA5">{{ total_jobs }}</strong>
-    </span>
-    <span style="margin-left:20px;font-size:13px;color:#555;font-weight:600">
-      Watch Fatigue: <strong style="color:{{ avg_color }}">{{ avg_fatigue }} — {{ avg_durum }}</strong>
-    </span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <span style="font-size:13px;color:#555;font-weight:600">Total Jobs:
+        <span style="background:#185FA5;color:#fff;border-radius:12px;padding:2px 10px;font-size:13px;font-weight:700;margin-left:4px">{{ total_jobs }}</span>
+      </span>
+      <span style="font-size:13px;color:#555;font-weight:600">Watch Fatigue:
+        <span style="background:{{ avg_color }};color:#fff;border-radius:12px;padding:2px 10px;font-size:13px;font-weight:700;margin-left:4px">{{ avg_fatigue }} — {{ avg_durum }}</span>
+      </span>
+    </div>
     {% endif %}
     {% endif %}
   </div>
