@@ -668,14 +668,19 @@ def operation_edit(op_id):
     if prev_bitis:
         if datetime.fromisoformat(off_st) < datetime.fromisoformat(prev_bitis['on_station']):
             return 'Off Station önceki işin bitiş saatinden (' + prev_bitis['on_station'][11:16] + ') önce olamaz', 400
-    # Saat sırası kontrolü
+    # Saat sırası kontrolü — sadece dolu alanlar
         if pob and datetime.fromisoformat(pob) < datetime.fromisoformat(off_st):
             return 'POB, Off Station\'dan önce olamaz', 400
         if poff and pob and datetime.fromisoformat(poff) < datetime.fromisoformat(pob):
             return 'P.Off, POB\'dan önce olamaz', 400
+        if poff and not pob and datetime.fromisoformat(poff) < datetime.fromisoformat(off_st):
+            return 'P.Off, Off Station\'dan önce olamaz', 400
         if on_st and poff and datetime.fromisoformat(on_st) < datetime.fromisoformat(poff):
             return 'On Station, P.Off\'dan önce olamaz', 400
-    is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
+        if on_st and not poff and pob and datetime.fromisoformat(on_st) < datetime.fromisoformat(pob):
+            return 'On Station, POB\'dan önce olamaz', 400
+        if on_st and not poff and not pob and datetime.fromisoformat(on_st) < datetime.fromisoformat(off_st):
+            return 'On Station, Off Station\'dan önce olamaz', 400
 
     if off_st and pob and poff and on_st:
         base   = off_st[:10]+'T00:00:00'
