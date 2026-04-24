@@ -650,23 +650,27 @@ def operation_edit(op_id):
     poff  = poff  if poff  else (op['poff']       or '')
     on_st = on_st if on_st else (op['on_station'] or '')
 
-    # Fatigue yeniden hesapla
-    is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
+    # Fatigue yeniden hesapla — sadece 4 saat de doluysa
+    if off_st and pob and poff and on_st:
+        is_tipi, k = detect_is_tipi(from_nokta, to_nokta)
+        base   = off_st[:10]+'T00:00:00'
+        off_h  = dt_to_abs_hour(off_st, base)
+        pob_h  = dt_to_abs_hour(pob,   base)
+        poff_h = dt_to_abs_hour(poff,  base)
+        on_h   = dt_to_abs_hour(on_st, base)
 
-    base   = off_st[:10]+'T00:00:00'
-    off_h  = dt_to_abs_hour(off_st, base)
-    pob_h  = dt_to_abs_hour(pob,   base) if pob   else off_h
-    poff_h = dt_to_abs_hour(poff,  base) if poff  else off_h
-    on_h   = dt_to_abs_hour(on_st, base) if on_st else off_h
+        if pob_h  < off_h:  pob_h  += 24
+        if poff_h < pob_h:  poff_h += 24
+        if on_h   < poff_h: on_h   += 24
 
-    if pob_h  < off_h:  pob_h  += 24
-    if poff_h < pob_h:  poff_h += 24
-    if on_h   < poff_h: on_h   += 24
-
-    vessel = db.execute("SELECT grt FROM vessels WHERE id=?", (op['vessel_id'],)).fetchone()
-    grt = vessel['grt'] if vessel else 8000
-
-    katki = job_contrib(off_h, pob_h, poff_h, on_h, is_tipi, grt)
+        vessel = db.execute("SELECT grt FROM vessels WHERE id=?", (op['vessel_id'],)).fetchone()
+        grt = vessel['grt'] if vessel else 8000
+        katki = job_contrib(off_h, pob_h, poff_h, on_h, is_tipi, grt)
+    else:
+        katki  = op['fatigue_katki']  or 0
+        toplam = op['fatigue_toplam'] or 0
+        norm   = op['fatigue_norm']   or 0
+        durum  = op['fatigue_durum']  or 'FIT'
 
     # Bir önceki işi bul (bu iş hariç)
     prev = db.execute(
