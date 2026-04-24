@@ -1,24 +1,25 @@
 {% extends 'base.html' %}
+
 {% block title %}Gemiler — PilotOps{% endblock %}
+
 {% block content %}
 
 <div class="page-header" style="margin-bottom:16px">
   <div class="page-title">Gemiler</div>
-  <a href="/vessels/add" id="btn-gemi-ekle" class="btn btn-primary" style="display:none">+ Gemi ekle</a>
+  <button onclick="acModal()" id="btn-gemi-ekle" class="btn btn-primary" style="display:none">+ Gemi ekle</button>
 </div>
 
 {% set all_segments = [
-  ('gelecek',     '🕐 Gelecek'),
-  ('demirde',     '⚓ Demirde'),
-  ('iskeleler',   '🏗️ İskeleler'),
+  ('gelecek', '🕐 Gelecek'),
+  ('demirde', '⚓ Demirde'),
+  ('iskeleler', '🏗️ İskeleler'),
   ('k_samandira', '🔺 Kuzey Şam.'),
   ('g_samandira', '<span style="color:#1a7a2e">▲</span> Güney Şam.'),
-  ('toros',       '🏭 Toros'),
-  ('irtibatta',   '📡 İrtibatta'),
-  ('manevrada',   '🚢 Manevrada'),
+  ('toros', '🏭 Toros'),
+  ('irtibatta', '📡 İrtibatta'),
+  ('manevrada', '🚢 Manevrada'),
 ] %}
 
-{# ── Sticky wrapper ── #}
 <div id="sticky-top" style="position:sticky;top:0;z-index:100;background:#f5f7fa;padding-bottom:8px">
   <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
     <div style="display:flex;gap:6px">
@@ -66,11 +67,10 @@
     <span id="seg-header-label" style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#185FA5"></span>
     <span id="seg-header-count" style="font-size:11px;color:#aaa;font-weight:600"></span>
     <a href="/operations/add" id="seg-is-ekle"
-       style="display:none;padding:4px 12px;border-radius:6px;background:#185FA5;color:#fff;font-size:12px;font-weight:700;text-decoration:none;margin-left:auto">+ Add Job</a>
+      style="display:none;padding:4px 12px;border-radius:6px;background:#185FA5;color:#fff;font-size:12px;font-weight:700;text-decoration:none;margin-left:auto">+ Add Job</a>
   </div>
 </div>
 
-{# ── Arama Sonucu ── #}
 <div id="search-result" style="display:none;margin-bottom:16px">
   <div class="card" style="padding:0">
     <div style="padding:10px 14px;background:#FFFBF0;border-bottom:1px solid #f0e0a0;font-size:13px;font-weight:700;color:#7a4800">🔍 Arama Sonuçları</div>
@@ -78,7 +78,6 @@
   </div>
 </div>
 
-{# ── Segment Listeleri ── #}
 {% for key, label in all_segments %}
 {% set seg_vessels = vessels | selectattr('durum','equalto', key) | list %}
 <div id="seg-{{ key }}" style="display:none;margin-bottom:16px">
@@ -104,20 +103,17 @@
       </thead>
       <tbody>
       {% for v in seg_vessels %}
-
       {% if v.gelis_zamani and v.gelis_zamani|length >= 16 %}
         {% set e = v.gelis_zamani %}
         {% set eta_fmt = e[8:10] ~ '.' ~ e[5:7] ~ '.' ~ e[2:4] ~ ' / ' ~ e[11:16] %}
       {% else %}
         {% set eta_fmt = '—' %}
       {% endif %}
-
       {% if v.draft_bas or v.draft_kic %}
         {% set draft_fmt = (v.draft_bas|string if v.draft_bas else '—') ~ '/' ~ (v.draft_kic|string if v.draft_kic else '—') %}
       {% else %}
         {% set draft_fmt = '—' %}
       {% endif %}
-
       <tr style="border-bottom:1px solid #f0f0f0" data-gemi="{{ v.gemi_adi|lower }}">
         <td style="padding:9px 12px;vertical-align:middle">
           <div style="font-weight:700;font-size:13px;color:#1a1a1a;line-height:1.3">
@@ -147,9 +143,9 @@
         <td style="padding:9px 8px;font-size:12px;color:#333;text-align:center;vertical-align:middle;white-space:nowrap">{{ eta_fmt }}</td>
         <td style="padding:9px 8px;text-align:right;white-space:nowrap;vertical-align:middle">
           <a href="/vessels/{{ v.id }}/edit"
-             style="padding:4px 10px;border-radius:6px;border:1.5px solid #888;
-                    background:#fff;color:#555;font-size:11px;font-weight:700;
-                    text-decoration:none;margin-right:3px">Düzenle</a>
+            style="padding:4px 10px;border-radius:6px;border:1.5px solid #888;
+                   background:#fff;color:#555;font-size:11px;font-weight:700;
+                   text-decoration:none;margin-right:3px">Düzenle</a>
           <div style="position:relative;display:inline-block">
             <button onclick="toggleDurumMenu('{{ key }}_{{ v.id }}', event)"
               style="padding:4px 10px;border-radius:6px;border:1.5px solid #185FA5;
@@ -157,9 +153,9 @@
               Taşı ▾
             </button>
             <div id="menu-{{ key }}_{{ v.id }}"
-                 style="display:none;position:fixed;background:#fff;border:1px solid #e0e0e0;
-                        border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);
-                        z-index:9999;min-width:170px;padding:4px 0">
+              style="display:none;position:fixed;background:#fff;border:1px solid #e0e0e0;
+                     border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.15);
+                     z-index:9999;min-width:170px;padding:4px 0">
               {% set all_durums = [
                 ('gelecek','🕐 Gelecek'),('demirde','⚓ Demirde'),('iskeleler','🏗️ İskeleler'),
                 ('k_samandira','🔺 Kuzey Şam.'),('g_samandira','▲ Güney Şam.'),
@@ -188,6 +184,158 @@
 </div>
 {% endfor %}
 
+{# ── Gemi Ekle Modal ── #}
+<div id="gemi-ekle-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center">
+  <div style="background:#f5f7fa;border-radius:14px;width:100%;max-width:740px;max-height:92vh;overflow-y:auto;
+              box-shadow:0 12px 48px rgba(0,0,0,.22);padding:28px 32px;position:relative">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-size:18px;font-weight:800;color:#1a1a1a">Yeni Gemi</div>
+      <button onclick="kapat()" style="font-size:20px;color:#aaa;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px">✕</button>
+    </div>
+    <div id="modal-hata" style="display:none;margin-bottom:16px;padding:10px 14px;border-radius:8px;background:#FCEBEB;color:#791F1F;font-size:13px;font-weight:600"></div>
+    <form id="gemi-ekle-form" autocomplete="off">
+
+      <div class="section">
+        <div class="section-title">Kimlik</div>
+        <div class="grid3">
+          <div class="form-group">
+            <label>IMO *</label>
+            <input type="text" name="imo_no" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Gemi Adı *</label>
+            <input type="text" name="gemi_adi" required autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Bayrak</label>
+            <select name="bayrak">
+              <option value="">Seç...</option>
+              <option>Türkiye</option><option>Panama</option><option>Liberia</option>
+              <option>Marshall Isl.</option><option>Bahamas</option><option>Comoros</option>
+              <option>Singapore</option><option>Malta</option><option>Cyprus</option>
+              <option>Russian Fed.</option><option>Belize</option><option>Vanuatu</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Teknik</div>
+        <div class="grid4">
+          <div class="form-group">
+            <label>Type</label>
+            <select name="tip">
+              <option value="">Seç...</option>
+              <option value="G/C">G/C — General</option>
+              <option value="Cont">Cont — Container</option>
+              <option value="Bulk">Bulk — Bulk</option>
+              <option value="Tan">Tan — Tanker</option>
+              <option value="Ro/Ro">Ro/Ro — Ro/Ro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>GRT</label>
+            <input type="number" name="grt" step="1" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>LOA (m)</label>
+            <input type="number" name="loa" step="0.1" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>BT (Bow Thruster)</label>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+              <select name="thruster_var" id="m-thr-var" onchange="mThrToggle()"
+                style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 8px;font-size:14px">
+                <option value="0">Yok</option>
+                <option value="1">Var</option>
+              </select>
+              <div style="flex:1;position:relative">
+                <span style="position:absolute;top:-14px;left:0;font-size:10px;color:#aaa;font-weight:600">kW</span>
+                <input type="number" name="thruster_kw" id="m-thr-kw" min="0" disabled autocomplete="off"
+                  style="width:100%;border:1px solid #d8d8d8;border-radius:7px;padding:9px 8px;font-size:14px;background:#f5f5f5;color:#aaa">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:4px">
+          <div class="form-group">
+            <label>F/A Draft (m)</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="number" name="draft_bas" step="0.01" min="0" max="25" autocomplete="off"
+                style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px">
+              <span style="color:#aaa;font-weight:600">/</span>
+              <input type="number" name="draft_kic" step="0.01" min="0" max="25" autocomplete="off"
+                style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tug</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <select name="tug_var" id="m-tug-var" onchange="mTugToggle()"
+                style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 8px;font-size:15px">
+                <option value="0">Yok</option>
+                <option value="1">Var</option>
+              </select>
+              <span style="color:#aaa;font-weight:600">/</span>
+              <input type="number" name="tug_adet" id="m-tug-adet" min="0" max="9" disabled autocomplete="off"
+                style="flex:1;border:1px solid #d8d8d8;border-radius:7px;padding:9px 10px;font-size:15px;background:#f5f5f5;color:#aaa">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tehlikeli Yük</label>
+            <div style="display:flex;align-items:center;gap:8px;height:42px;margin-top:6px">
+              <input type="checkbox" name="tehlikeli_yuk" id="m-teh" style="width:18px;height:18px;cursor:pointer">
+              <label for="m-teh" style="font-size:14px;cursor:pointer;font-weight:400;color:#444">IMDG var</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Sefer & Operasyon</div>
+        <div class="grid3">
+          <div class="form-group">
+            <label>From</label>
+            <input type="text" name="from_liman" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>To</label>
+            <input type="text" name="to_liman" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>ETA</label>
+            <input type="datetime-local" name="gelis_zamani" id="m-eta" oninput="mEtaKontrol()">
+            <div id="m-eta-uyari" style="display:none;margin-top:6px;padding:7px 10px;border-radius:6px;background:#FFF3E0;color:#7A4800;font-size:12px;font-weight:600"></div>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:4px">
+          <div class="form-group">
+            <label>Acenta</label>
+            <input type="text" name="acenta" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Process</label>
+            <input type="text" name="process" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Not</div>
+        <div class="form-group" style="margin-bottom:0">
+          <input type="text" name="not_alani" autocomplete="off">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+        <button type="button" onclick="kapat()" class="btn btn-secondary">İptal</button>
+        <button type="button" onclick="gemikaydet()" class="btn btn-primary">Kaydet</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 var SEGMENT_KEYS = ['gelecek','demirde','iskeleler','k_samandira','g_samandira','toros','irtibatta','manevrada'];
 var GEMI_EKLE_SEGMENTS = ['gelecek','irtibatta'];
@@ -199,10 +347,9 @@ var SEGMENT_LABELS = {
 var SEGMENT_COLORS = {'irtibatta':'#27500A','manevrada':'#0C447C'};
 
 function toggleSegment(key) {
-  var el  = document.getElementById('seg-' + key);
+  var el = document.getElementById('seg-' + key);
   var btn = document.getElementById('btn-' + key);
   var isOpen = el.style.display !== 'none';
-
   SEGMENT_KEYS.forEach(function(k) {
     document.getElementById('seg-' + k).style.display = 'none';
     var b = document.getElementById('btn-' + k);
@@ -213,26 +360,21 @@ function toggleSegment(key) {
   document.getElementById('search-result').style.display = 'none';
   document.getElementById('vessel-search').value = '';
   document.getElementById('search-clear').style.display = 'none';
-
   var gemiEkleBtn = document.getElementById('btn-gemi-ekle');
-  var segHeader   = document.getElementById('seg-header');
-  var segIsEkle   = document.getElementById('seg-is-ekle');
-
+  var segHeader = document.getElementById('seg-header');
+  var segIsEkle = document.getElementById('seg-is-ekle');
   if (!isOpen) {
     el.style.display = 'block';
     btn.style.background = '#185FA5'; btn.style.color = '#fff'; btn.style.borderColor = '#185FA5';
     var badge = document.getElementById('badge-' + key);
     if (badge) badge.style.background = 'rgba(255,255,255,0.3)';
-
     var rows = el.querySelectorAll('tbody tr').length;
     document.getElementById('seg-header-label').textContent = SEGMENT_LABELS[key] || key.toUpperCase();
     document.getElementById('seg-header-label').style.color = SEGMENT_COLORS[key] || '#185FA5';
     document.getElementById('seg-header-count').textContent = rows + ' gemi';
     segHeader.style.display = 'flex';
-
     gemiEkleBtn.style.display = GEMI_EKLE_SEGMENTS.indexOf(key) !== -1 ? 'inline-flex' : 'none';
     segIsEkle.style.display = (key === 'manevrada') ? 'inline-block' : 'none';
-
     setTimeout(function() { el.scrollIntoView({behavior:'smooth', block:'start'}); }, 50);
   } else {
     segHeader.style.display = 'none';
@@ -241,6 +383,68 @@ function toggleSegment(key) {
   }
 }
 
+// ── Modal ──────────────────────────────────────────────────
+function acModal() {
+  var modal = document.getElementById('gemi-ekle-modal');
+  modal.style.display = 'flex';
+  document.getElementById('gemi-ekle-form').reset();
+  document.getElementById('modal-hata').style.display = 'none';
+  var eta = document.getElementById('m-eta');
+  var now = new Date();
+  var pad = function(n){ return String(n).padStart(2,'0'); };
+  eta.value = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'T'+pad(now.getHours())+':'+pad(now.getMinutes());
+  mThrToggle(); mTugToggle();
+}
+function kapat() {
+  document.getElementById('gemi-ekle-modal').style.display = 'none';
+}
+function mThrToggle() {
+  var sel = document.getElementById('m-thr-var');
+  var inp = document.getElementById('m-thr-kw');
+  inp.disabled = sel.value !== '1';
+  inp.style.background = sel.value === '1' ? '#fff' : '#f5f5f5';
+  inp.style.color = sel.value === '1' ? '#1a1a1a' : '#aaa';
+  if (sel.value !== '1') inp.value = '';
+}
+function mTugToggle() {
+  var sel = document.getElementById('m-tug-var');
+  var inp = document.getElementById('m-tug-adet');
+  inp.disabled = sel.value !== '1';
+  inp.style.background = sel.value === '1' ? '#fff' : '#f5f5f5';
+  inp.style.color = sel.value === '1' ? '#1a1a1a' : '#aaa';
+  if (sel.value !== '1') inp.value = '';
+}
+function mEtaKontrol() {
+  var eta = document.getElementById('m-eta');
+  var uyari = document.getElementById('m-eta-uyari');
+  if (!eta.value) { uyari.style.display='none'; return; }
+  var secilen = new Date(eta.value);
+  var now = new Date();
+  if (secilen < new Date(now.getTime()-86400000)) {
+    uyari.textContent='⚠️ ETA çok geride.'; uyari.style.display='block';
+  } else if (secilen > new Date(now.getTime()+15*86400000)) {
+    uyari.textContent='⚠️ ETA çok ilerde.'; uyari.style.display='block';
+  } else { uyari.style.display='none'; }
+}
+function gemikaydet() {
+  var form = document.getElementById('gemi-ekle-form');
+  var data = new FormData(form);
+  fetch('/vessels/add', { method:'POST', body:data })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.ok) { kapat(); location.reload(); }
+      else {
+        var h = document.getElementById('modal-hata');
+        h.textContent = d.hata || 'Bir hata oluştu.';
+        h.style.display = 'block';
+      }
+    });
+}
+document.getElementById('gemi-ekle-modal').addEventListener('click', function(e){
+  if (e.target === this) kapat();
+});
+
+// ── Arama ─────────────────────────────────────────────────
 var allVessels = [
   {% for v in vessels %}
   {id:{{ v.id }},ad:"{{ v.gemi_adi }}",durum:"{{ v.durum }}",
@@ -255,18 +459,15 @@ var allVessels = [
   }{% if not loop.last %},{% endif %}
   {% endfor %}
 ];
-
 var durumLabels = {
   'gelecek':'🕐 Gelecek','demirde':'⚓ Demirde','iskeleler':'🏗️ İskeleler',
   'k_samandira':'🔺 Kuzey Şam.','g_samandira':'▲ Güney Şam.',
   'toros':'🏭 Toros','irtibatta':'📡 İrtibatta','manevrada':'🚢 Manevrada'
 };
-
 function fmtEta(raw) {
   if (!raw || raw === '—' || raw.length < 16) return '—';
   return raw.slice(8,10)+'.'+raw.slice(5,7)+'.'+raw.slice(2,4)+' / '+raw.slice(11,16);
 }
-
 function searchVessel(q) {
   var clear = document.getElementById('search-clear');
   var resultDiv = document.getElementById('search-result');
@@ -280,7 +481,6 @@ function searchVessel(q) {
   });
   document.getElementById('btn-gemi-ekle').style.display = 'none';
   document.getElementById('seg-header').style.display = 'none';
-
   var found = allVessels.filter(function(v) { return v.ad.toLowerCase().includes(q.toLowerCase()); });
   if (found.length === 0) {
     resultBody.innerHTML = '<div style="padding:24px;text-align:center;color:#aaa;font-size:13px">Gemi bulunamadı</div>';
@@ -309,13 +509,11 @@ function searchVessel(q) {
   }
   resultDiv.style.display = 'block';
 }
-
 function clearSearch() {
   document.getElementById('vessel-search').value = '';
   document.getElementById('search-result').style.display = 'none';
   document.getElementById('search-clear').style.display = 'none';
 }
-
 function toggleDurumMenu(id, e) {
   e.stopPropagation();
   var btn = e.currentTarget;
@@ -324,15 +522,13 @@ function toggleDurumMenu(id, e) {
   document.querySelectorAll('[id^="menu-"]').forEach(function(m) { m.style.display='none'; });
   if (menu) {
     menu.style.display = 'block';
-    menu.style.top  = (rect.bottom + window.scrollY + 4) + 'px';
+    menu.style.top = (rect.bottom + window.scrollY + 4) + 'px';
     menu.style.left = (rect.right - 170 + window.scrollX) + 'px';
   }
 }
-
 document.addEventListener('click', function() {
   document.querySelectorAll('[id^="menu-"]').forEach(function(m) { m.style.display='none'; });
 });
-
 function setDurum(vesselId, durum) {
   var form = new FormData();
   form.append('durum', durum);
@@ -340,7 +536,6 @@ function setDurum(vesselId, durum) {
     .then(function(r) { return r.json(); })
     .then(function(d) { if (d.ok) location.reload(); });
 }
-
 document.addEventListener('DOMContentLoaded', function(){
   var params = new URLSearchParams(window.location.search);
   var seg = params.get('seg');
