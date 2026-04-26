@@ -796,8 +796,28 @@ def livemaps():
     return render_template('livemaps.html', manevrada_vessels=manevrada_vessels)
 
 @app.route('/livemaps/data')
+@app.route('/livemaps/data')
 def livemaps_data():
     db = get_db()
+    # Tablo yoksa olustur
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS livemaps_vessels (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vessel_id INTEGER REFERENCES vessels(id),
+            gemi_adi TEXT NOT NULL,
+            rihitim TEXT NOT NULL,
+            taraf TEXT NOT NULL,
+            yanasma TEXT NOT NULL,
+            baba_bas INTEGER NOT NULL,
+            baba_son INTEGER NOT NULL,
+            loa REAL,
+            durum TEXT DEFAULT 'yanasmis',
+            romorkcu_firma TEXT,
+            olusturma TEXT DEFAULT (datetime('now')),
+            guncelleme TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    db.commit()
     rows = db.execute("SELECT * FROM livemaps_vessels ORDER BY olusturma DESC").fetchall()
     ships = []
     for r in rows:
