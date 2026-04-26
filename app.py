@@ -881,3 +881,4 @@ def livemaps_vessel_not(lv_id):
     db.execute("UPDATE livemaps_vessels SET not_text=? WHERE id=?", (data.get('not_text',''), lv_id))
     db.commit()
     return jsonify({'ok': True})
+init_db()
