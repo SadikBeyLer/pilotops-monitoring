@@ -341,21 +341,15 @@ function lmDrawShip(ship){
   const nm=lmEl('text',{x:scx,y:scy-fs*0.2,fill:'#f1f5f9','font-size':fs,
     'font-family':'Courier New','font-weight':'bold','text-anchor':'middle','pointer-events':'none',
     'paint-order':'stroke','stroke':'#0f172a','stroke-width':3});
-  nm.textContent=name;
+  nm.textContent=name.toUpperCase();
   g.appendChild(nm);
-  if(loa){
+if(loa||romorkcu){
+    const infoText=(loa?loa+'m':'')+(loa&&romorkcu?'   ':'')+(romorkcu?romorkcu.toUpperCase():'');
     const ll=lmEl('text',{x:scx,y:scy+fs*1.1,fill:'#cbd5e1','font-size':fs*0.75,
       'font-family':'Courier New','text-anchor':'middle','pointer-events':'none',
       'paint-order':'stroke','stroke':'#0f172a','stroke-width':2});
-    ll.textContent=loa+'m';
+    ll.textContent=infoText;
     g.appendChild(ll);
-  }
-  if(romorkcu){
-    const rl=lmEl('text',{x:scx,y:scy+fs*2.1,fill:'#94a3b8','font-size':fs*0.65,
-      'font-family':'Courier New','text-anchor':'middle','pointer-events':'none',
-      'paint-order':'stroke','stroke':'#0f172a','stroke-width':2});
-    rl.textContent=romorkcu;
-    g.appendChild(rl);
   }
 
   g.addEventListener('mouseenter',e=>lmShowTip(e,`<b>${name}</b>
