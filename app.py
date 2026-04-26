@@ -93,6 +93,10 @@ def migrate_livemaps():
             guncelleme TEXT DEFAULT (datetime('now'))
         )
     """)
+    try:
+        db.execute("ALTER TABLE livemaps_vessels ADD COLUMN not_text TEXT")
+    except:
+        pass
     db.commit()
     db.close()    
 
