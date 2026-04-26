@@ -837,7 +837,7 @@ def livemaps_data():
             'loa': r['loa'],
             'durum': r['durum'],
             'romorkcu': r['romorkcu_firma'] or '',
-            'not_text': r['not_text'] or '',
+            'not_text': r['not_text'] if 'not_text' in r.keys() else '',
         })
     return jsonify(ships)
 
