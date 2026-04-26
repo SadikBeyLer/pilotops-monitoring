@@ -255,6 +255,7 @@ function lmRedraw(){
   for(const[key,data]of Object.entries(KOORDINATLAR)){
     const[rihitim,taraf]=key.split('_');
     data.babalar.forEach(b=>{
+      if((key==="mmk_kuzey"||key==="mmk_guney")&&b.no<=3)return;
       const c=lmEl('circle',{cx:lmWx(b.cx),cy:lmWy(b.cy),r:4.5,
         fill:'rgba(34,197,94,0.65)',stroke:'#16a34a','stroke-width':0.8,style:'cursor:crosshair'});
       c.addEventListener('mouseenter',e=>lmShowTip(e,`<b>Baba ${b.no}</b><div class="lm-tr2"><span>Rihtim</span><span>${rihitim.toUpperCase()} ${taraf}</span></div>`));
