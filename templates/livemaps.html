@@ -337,7 +337,7 @@ function lmDrawShip(ship){
     stroke:isA?'#60a5fa':'#c4b5fd',
     'stroke-width':2.5,'stroke-dasharray':isA?'none':'10,5','stroke-linejoin':'round'}));
 
-  const fs=Math.max(10,Math.min(18,shipLen/18));
+  const fs=Math.max(20,Math.min(36,shipLen/9));
   const nm=lmEl('text',{x:scx,y:scy-fs*0.2,fill:'#f1f5f9','font-size':fs,
     'font-family':'Courier New','font-weight':'bold','text-anchor':'middle','pointer-events':'none',
     'paint-order':'stroke','stroke':'#0f172a','stroke-width':3});
