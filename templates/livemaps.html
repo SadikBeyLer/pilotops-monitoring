@@ -475,7 +475,7 @@ function lmRenderList(){
 
 function lmDeleteShip(id){
   if(!confirm('Bu gemiyi silmek istediğinize emin misiniz?'))return;
-  fetch(`/livemaps/ship/${id}/delete`,{method:'POST'})
+  fetch(`/livemaps/vessels/${id}/sil`,{method:'POST'})
     .then(r=>r.json())
     .then(d=>{if(d.ok){lmShips=lmShips.filter(s=>s.id!==id);lmRenderList();lmRenderMap();}});
 }
