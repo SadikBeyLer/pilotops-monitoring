@@ -277,8 +277,15 @@ function lmDrawShip(ship){
   const hx2=lmWx(b2.cx),hy2=lmWy(b2.cy);
   const dx_full=hx2-hx1,dy_full=hy2-hy1;
   const fullLen=Math.sqrt(dx_full*dx_full+dy_full*dy_full);
-  const inset=fullLen*0.05;
   const ux=dx_full/fullLen,uy=dy_full/fullLen;
+
+  // Yarım baba mesafesi: b1'in komşu babasından hesapla
+  const rKey=rihitim+'_'+taraf;
+  const rData=KOORDINATLAR[rKey];
+  const bNext=rData?rData.babalar.find(b=>b.no===b1.no+1):null;
+  const babaMesafe=bNext?Math.sqrt(Math.pow(lmWx(bNext.cx)-hx1,2)+Math.pow(lmWy(bNext.cy)-hy1,2)):fullLen*0.05;
+  const inset=babaMesafe*0.5;
+
   const x1=hx1+ux*inset,y1=hy1+uy*inset;
   const x2=hx2-ux*inset,y2=hy2-uy*inset;
   const mx=(x1+x2)/2,my=(y1+y2)/2;
@@ -291,7 +298,7 @@ function lmDrawShip(ship){
 
   const perpAngle=angle+Math.PI/2;
   const offsetDir=taraf==='kuzey'?-1:1;
-  const offset=(halfW+20)*offsetDir;
+  const offset=(halfW+14)*offsetDir;
   const scx=mx+Math.cos(perpAngle)*offset;
   const scy=my+Math.sin(perpAngle)*offset;
 
@@ -301,7 +308,8 @@ function lmDrawShip(ship){
   const p3x=scx+cos*halfL-sin*halfW,p3y=scy+sin*halfL+cos*halfW;
   const p4x=scx+cos*halfL+sin*halfW,p4y=scy+sin*halfL-cos*halfW;
 
-  const pruvaAtEnd=yanasma==='iskele';
+  // pruvaAtEnd: güney+sancak=false, güney+iskele=true, kuzey+sancak=true, kuzey+iskele=false
+  const pruvaAtEnd=(taraf==='kuzey')===(yanasma==='sancak');
   const pruvaAngle=pruvaAtEnd?angle:angle+Math.PI;
   const pruvaX=scx+Math.cos(pruvaAngle)*(halfL+pruvaLen);
   const pruvaY=scy+Math.sin(pruvaAngle)*(halfL+pruvaLen);
@@ -317,8 +325,12 @@ function lmDrawShip(ship){
   const pruvaC=pruvaAtEnd?{x:(p3x+p4x)/2,y:(p3y+p4y)/2}:{x:(p1x+p2x)/2,y:(p1y+p2y)/2};
   const kicC=pruvaAtEnd?{x:(p1x+p2x)/2,y:(p1y+p2y)/2}:{x:(p3x+p4x)/2,y:(p3y+p4y)/2};
 
-  g.appendChild(lmEl('line',{x1:hx1,y1:hy1,x2:kicC.x,y2:kicC.y,stroke:hc,'stroke-width':1.5,'stroke-dasharray':'5,3',opacity:0.8}));
-  g.appendChild(lmEl('line',{x1:hx2,y1:hy2,x2:pruvaC.x,y2:pruvaC.y,stroke:hc,'stroke-width':1.5,'stroke-dasharray':'5,3',opacity:0.8}));
+  // Halatlar: pruvaAtEnd=true → baş=hx2, kıç=hx1 | pruvaAtEnd=false → baş=hx1, kıç=hx2
+  const hBas=pruvaAtEnd?{x:hx2,y:hy2}:{x:hx1,y:hy1};
+  const hKic=pruvaAtEnd?{x:hx1,y:hy1}:{x:hx2,y:hy2};
+
+  g.appendChild(lmEl('line',{x1:hKic.x,y1:hKic.y,x2:kicC.x,y2:kicC.y,stroke:hc,'stroke-width':1.5,'stroke-dasharray':'5,3',opacity:0.8}));
+  g.appendChild(lmEl('line',{x1:hBas.x,y1:hBas.y,x2:pruvaC.x,y2:pruvaC.y,stroke:hc,'stroke-width':1.5,'stroke-dasharray':'5,3',opacity:0.8}));
 
   g.appendChild(lmEl('polygon',{points:pts,
     fill:isA?'#1e3a8a':'none','fill-opacity':isA?0.85:0.1,
