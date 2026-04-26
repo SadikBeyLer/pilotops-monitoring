@@ -288,6 +288,7 @@ function lmDrawShip(ship){
   const shipW=Math.min(shipLen*0.14,45);
   const halfL=shipLen/2,halfW=shipW/2;
   const pruvaLen=shipW*0.7;
+  const kicLen=shipW*0.3;
 
   const perpAngle=angle+Math.PI/2;
   const offsetDir=taraf==='kuzey'?-1:1;
@@ -306,9 +307,13 @@ function lmDrawShip(ship){
   const pruvaX=scx+Math.cos(pruvaAngle)*(halfL+pruvaLen);
   const pruvaY=scy+Math.sin(pruvaAngle)*(halfL+pruvaLen);
 
+  const kicAngle=pruvaAtEnd?angle+Math.PI:angle;
+  const kicX=scx+Math.cos(kicAngle)*(halfL+kicLen);
+  const kicY=scy+Math.sin(kicAngle)*(halfL+kicLen);
+
   let pts=pruvaAtEnd
-    ?`${p1x},${p1y} ${p2x},${p2y} ${p3x},${p3y} ${pruvaX},${pruvaY} ${p4x},${p4y}`
-    :`${p3x},${p3y} ${p4x},${p4y} ${p1x},${p1y} ${pruvaX},${pruvaY} ${p2x},${p2y}`;
+    ?`${p1x},${p1y} ${kicX},${kicY} ${p2x},${p2y} ${p3x},${p3y} ${pruvaX},${pruvaY} ${p4x},${p4y}`
+    :`${p3x},${p3y} ${kicX},${kicY} ${p4x},${p4y} ${p1x},${p1y} ${pruvaX},${pruvaY} ${p2x},${p2y}`;
 
   const isA=durum==='yanasmis';
   const g=lmEl('g',{style:'cursor:pointer'});
@@ -317,8 +322,12 @@ function lmDrawShip(ship){
   const pruvaC=pruvaAtEnd?{x:(p3x+p4x)/2,y:(p3y+p4y)/2}:{x:(p1x+p2x)/2,y:(p1y+p2y)/2};
   const kicC=pruvaAtEnd?{x:(p1x+p2x)/2,y:(p1y+p2y)/2}:{x:(p3x+p4x)/2,y:(p3y+p4y)/2};
 
-  g.appendChild(lmEl('line',{x1:hx1,y1:hy1,x2:kicC.x,y2:kicC.y,stroke:hc,'stroke-width':1.5,'stroke-dasharray':'5,3',opacity:0.8}));
-  g.appendChild(lmEl('line',{x1:hx2,y1:hy2,x2:pruvaC.x,y2:pruvaC.y,stroke:hc,'stroke-width':1.5,'stroke-dasharray':'5,3',opacity:0.8}));
+  // sancak: b1=kıç babası, b2=baş babası | iskele: b1=baş babası, b2=kıç babası
+  const hBas=yanasma==='sancak'?{x:hx1,y:hy1}:{x:hx2,y:hy2};
+  const hSon=yanasma==='sancak'?{x:hx2,y:hy2}:{x:hx1,y:hy1};
+
+  g.appendChild(lmEl('line',{x1:hBas.x,y1:hBas.y,x2:kicC.x,y2:kicC.y,stroke:hc,'stroke-width':1.5,'stroke-dasharray':'5,3',opacity:0.8}));
+  g.appendChild(lmEl('line',{x1:hSon.x,y1:hSon.y,x2:pruvaC.x,y2:pruvaC.y,stroke:hc,'stroke-width':1.5,'stroke-dasharray':'5,3',opacity:0.8}));
 
   g.appendChild(lmEl('polygon',{points:pts,
     fill:isA?'#1e3a8a':'none','fill-opacity':isA?0.85:0.1,
