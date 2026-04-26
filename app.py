@@ -874,7 +874,7 @@ def livemaps_vessel_sil(lv_id):
     db.commit()
     return jsonify({'ok': True})
 
-@app.route('/livemaps/vessels/<int:lv_id>/not', methods=['POST'])
+@app.route('/livemaps/vessels/<int:lv_id>/guncelle-not', methods=['POST'])
 def livemaps_vessel_not(lv_id):
     db = get_db()
     data = request.get_json()

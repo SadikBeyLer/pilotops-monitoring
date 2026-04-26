@@ -465,13 +465,13 @@ function lmRenderList(){
 function lmAddNot(id){
   const not=prompt('Not girin:');
   if(not===null)return;
-  fetch(`/livemaps/vessels/${id}/not`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({not_text:not})})
+  fetch(`/livemaps/vessels/${id}/guncelle-not`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({not_text:not})})
     .then(r=>r.json())
     .then(d=>{if(d.ok){const s=lmShips.find(s=>s.id===id);if(s)s.not_text=not;lmRenderList();lmRedraw();}});
 }
 
 function lmDeleteNot(id){
-  fetch(`/livemaps/vessels/${id}/not`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({not_text:''})})
+  fetch(`/livemaps/vessels/${id}/guncelle-not`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({not_text:''})})
     .then(r=>r.json())
     .then(d=>{if(d.ok){const s=lmShips.find(s=>s.id===id);if(s)s.not_text='';lmRenderList();lmRedraw();}});
 }
