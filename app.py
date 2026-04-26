@@ -61,6 +61,8 @@ def init_db():
         except Exception:
             pass
     db.close()
+    migrate_vessels()
+    migrate_livemaps()
 
 def migrate_vessels():
     db = sqlite3.connect(DATABASE)
@@ -69,6 +71,28 @@ def migrate_vessels():
         db.execute("ALTER TABLE vessels ADD COLUMN draft_bas REAL DEFAULT 0")
     if 'draft_kic' not in cols:
         db.execute("ALTER TABLE vessels ADD COLUMN draft_kic REAL DEFAULT 0")
+    db.commit()
+    db.close()
+
+def migrate_livemaps():
+    db = sqlite3.connect(DATABASE)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS livemaps_vessels (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vessel_id INTEGER REFERENCES vessels(id),
+            gemi_adi TEXT NOT NULL,
+            rihitim TEXT NOT NULL,
+            taraf TEXT NOT NULL,
+            yanasma TEXT NOT NULL,
+            baba_bas INTEGER NOT NULL,
+            baba_son INTEGER NOT NULL,
+            loa REAL,
+            durum TEXT DEFAULT 'yanasmis',
+            romorkcu_firma TEXT,
+            olusturma TEXT DEFAULT (datetime('now')),
+            guncelleme TEXT DEFAULT (datetime('now'))
+        )
+    """)
     db.commit()
     db.close()    
 
@@ -762,3 +786,64 @@ def operation_sil(op_id):
     db.execute("DELETE FROM operations WHERE id=?", (op_id,))
     db.commit()
     return 'ok', 200
+
+@app.route('/livemaps')
+def livemaps():
+    db = get_db()
+    manevrada_vessels = db.execute(
+        "SELECT id, gemi_adi, loa FROM vessels WHERE durum='manevrada' ORDER BY gemi_adi"
+    ).fetchall()
+    return render_template('livemaps.html', manevrada_vessels=manevrada_vessels)
+
+@app.route('/livemaps/data')
+def livemaps_data():
+    db = get_db()
+    rows = db.execute("SELECT * FROM livemaps_vessels ORDER BY olusturma DESC").fetchall()
+    ships = []
+    for r in rows:
+        ships.append({
+            'id': r['id'],
+            'vessel_id': r['vessel_id'],
+            'name': r['gemi_adi'],
+            'rihitim': r['rihitim'],
+            'taraf': r['taraf'],
+            'yanasma': r['yanasma'],
+            'babaBasNo': r['baba_bas'],
+            'babaSonNo': r['baba_son'],
+            'loa': r['loa'],
+            'durum': r['durum'],
+            'romorkcu': r['romorkcu_firma'] or '',
+        })
+    return jsonify(ships)
+
+@app.route('/livemaps/vessels/add', methods=['POST'])
+def livemaps_vessel_add():
+    db = get_db()
+    data = request.get_json()
+    gemi_adi = data.get('name', '').strip()
+    rihitim = data.get('rihitim', '')
+    taraf = data.get('taraf', '')
+    yanasma = data.get('yanasma', '')
+    baba_bas = data.get('babaBasNo')
+    baba_son = data.get('babaSonNo')
+    loa = data.get('loa')
+    durum = data.get('durum', 'yanasmis')
+    romorkcu = data.get('romorkcu', '')
+    vessel_id = data.get('vessel_id')
+    if not gemi_adi or not rihitim or not baba_bas or not baba_son:
+        return jsonify({'ok': False, 'hata': 'Eksik alan'})
+    db.execute("""
+        INSERT INTO livemaps_vessels
+        (vessel_id, gemi_adi, rihitim, taraf, yanasma, baba_bas, baba_son, loa, durum, romorkcu_firma)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (vessel_id, gemi_adi, rihitim, taraf, yanasma, baba_bas, baba_son, loa, durum, romorkcu))
+    db.commit()
+    new_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
+    return jsonify({'ok': True, 'id': new_id})
+
+@app.route('/livemaps/vessels/<int:lv_id>/sil', methods=['POST'])
+def livemaps_vessel_sil(lv_id):
+    db = get_db()
+    db.execute("DELETE FROM livemaps_vessels WHERE id=?", (lv_id,))
+    db.commit()
+    return jsonify({'ok': True})
