@@ -269,7 +269,7 @@ function lmRedraw(){
 }
 
 function lmDrawShip(ship){
-  const{rihitim,taraf,yanasma,babaBasNo,babaSonNo,durum,name,loa,romorkcu,id}=ship;
+  const{rihitim,taraf,yanasma,babaBasNo,babaSonNo,durum,name,loa,romorkcu,id,not_text}=ship;
   const b1=lmGetBaba(rihitim,taraf,babaBasNo);
   const b2=lmGetBaba(rihitim,taraf,babaSonNo);
   if(!b1||!b2)return;
@@ -351,6 +351,13 @@ if(loa||romorkcu){
       'paint-order':'stroke','stroke':'#0f172a','stroke-width':2});
     ll.textContent=infoText;
     g.appendChild(ll);
+    if(ship.not_text){
+    const nl=lmEl('text',{x:scx,y:scy+fs*1.4,fill:'#fbbf24','font-size':fs*0.7,
+      'font-family':'Courier New','text-anchor':'middle','pointer-events':'none',
+      'paint-order':'stroke','stroke':'#0f172a','stroke-width':2});
+    nl.textContent='📋 '+ship.not_text;
+    g.appendChild(nl);
+  }
   }
 
   g.addEventListener('mouseenter',e=>lmShowTip(e,`<b>${name}</b>
