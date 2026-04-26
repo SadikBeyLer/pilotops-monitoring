@@ -837,6 +837,7 @@ def livemaps_data():
             'loa': r['loa'],
             'durum': r['durum'],
             'romorkcu': r['romorkcu_firma'] or '',
+            'not_text': r['not_text'] or '',
         })
     return jsonify(ships)
 
@@ -853,14 +854,15 @@ def livemaps_vessel_add():
     loa = data.get('loa')
     durum = data.get('durum', 'yanasmis')
     romorkcu = data.get('romorkcu', '')
+    not_text = data.get('not_text', '')
     vessel_id = data.get('vessel_id')
     if not gemi_adi or not rihitim or not baba_bas or not baba_son:
         return jsonify({'ok': False, 'hata': 'Eksik alan'})
     db.execute("""
         INSERT INTO livemaps_vessels
-        (vessel_id, gemi_adi, rihitim, taraf, yanasma, baba_bas, baba_son, loa, durum, romorkcu_firma)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (vessel_id, gemi_adi, rihitim, taraf, yanasma, baba_bas, baba_son, loa, durum, romorkcu))
+        (vessel_id, gemi_adi, rihitim, taraf, yanasma, baba_bas, baba_son, loa, durum, romorkcu_firma, not_text)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (vessel_id, gemi_adi, rihitim, taraf, yanasma, baba_bas, baba_son, loa, durum, romorkcu, data.get('not_text', '')))
     db.commit()
     new_id = db.execute("SELECT last_insert_rowid()").fetchone()[0]
     return jsonify({'ok': True, 'id': new_id})
