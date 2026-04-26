@@ -473,6 +473,13 @@ function lmRenderList(){
   </div>`).join('');
 }
 
+function lmDeleteShip(id){
+  if(!confirm('Bu gemiyi silmek istediğinize emin misiniz?'))return;
+  fetch(`/livemaps/ship/${id}/delete`,{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{if(d.ok){lmShips=lmShips.filter(s=>s.id!==id);lmRenderList();lmRenderMap();}});
+}
+
 function lmUpdateCount(){document.getElementById('lm-count').innerHTML='Gemi: <b>'+lmShips.length+'</b>';}
 function lmHCard(id){
   document.querySelectorAll('.lm-sc').forEach(c=>c.style.outline='');
