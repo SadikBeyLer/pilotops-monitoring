@@ -346,13 +346,13 @@ function lmDrawShip(ship){
   g.appendChild(nm);
 if(loa||romorkcu){
     const infoText=(loa?loa+'m':'')+(loa&&romorkcu?'   ':'')+(romorkcu?romorkcu.toUpperCase():'');
-    const ll=lmEl('text',{x:scx,y:scy+fs*0.5,fill:'#cbd5e1','font-size':fs*0.75,
+    const ll=lmEl('text',{x:scx-shipLen*0.2,y:scy+fs*0.5,fill:'#cbd5e1','font-size':fs*0.75,
       'font-family':'Courier New','text-anchor':'middle','pointer-events':'none',
       'paint-order':'stroke','stroke':'#0f172a','stroke-width':2});
     ll.textContent=infoText;
     g.appendChild(ll);
     if(ship.not_text){
-    const nl=lmEl('text',{x:scx,y:scy+fs*1.4,fill:'#fbbf24','font-size':fs*0.7,
+    const nl=lmEl('text',{x:scx+shipLen*0.1,y:scy+fs*0.5,fill:'#fbbf24','font-size':fs*0.7,
       'font-family':'Courier New','text-anchor':'middle','pointer-events':'none',
       'paint-order':'stroke','stroke':'#0f172a','stroke-width':2});
     nl.textContent='📋 '+ship.not_text;
