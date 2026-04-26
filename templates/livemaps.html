@@ -454,13 +454,6 @@ function lmAddShip(){
   });
 }
 
-function lmDeleteShip(id){
-  fetch('/livemaps/vessels/'+id+'/sil',{method:'POST'})
-    .then(r=>r.json()).then(d=>{
-      if(d.ok){lmShips=lmShips.filter(s=>s.id!==id);lmRedraw();lmRenderList();lmUpdateCount();}
-    });
-}
-
 function lmRenderList(){
   const l=document.getElementById('lm-ship-list');
   if(!lmShips.length){l.innerHTML='<div class="lm-empty">Yukaridan gemi ekleyin.</div>';return;}
@@ -477,7 +470,7 @@ function lmDeleteShip(id){
   if(!confirm('Bu gemiyi silmek istediğinize emin misiniz?'))return;
   fetch(`/livemaps/vessels/${id}/sil`,{method:'POST'})
     .then(r=>r.json())
-    .then(d=>{if(d.ok){lmShips=lmShips.filter(s=>s.id!==id);lmRenderList();lmRenderMap();}});
+    .then(d=>{if(d.ok){lmShips=lmShips.filter(s=>s.id!==id);lmRenderList();lmRedraw();}});
 }
 
 function lmUpdateCount(){document.getElementById('lm-count').innerHTML='Gemi: <b>'+lmShips.length+'</b>';}
