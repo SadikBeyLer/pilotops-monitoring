@@ -456,23 +456,26 @@ function lmRenderList(){
     <div class="lm-sm">${s.rihitim.toUpperCase()} ${s.taraf} &middot; B${s.babaBasNo}&ndash;B${s.babaSonNo} &middot; ${s.yanasma}</div>
     ${s.loa?'<div class="lm-sm">LOA: '+s.loa+'m'+(s.romorkcu?' &middot; '+s.romorkcu:'')+'</div>':''}
     <span class="lm-sbadge ${s.durum==='yanasmis'?'lm-sy':'lm-sg'}">${s.durum==='yanasmis'?'YANASМIS':'GELECEK'}</span>
+    ${s.not_text?`<div class="lm-not">${s.not_text} <span onclick="event.stopPropagation();lmDeleteNot(${s.id})" style="cursor:pointer;color:#f87171;">✕</span></div>`:''}
+    <button class="lm-snot" onclick="event.stopPropagation();lmAddNot(${s.id})">📝</button>
     <button class="lm-sdel" onclick="event.stopPropagation();lmDeleteShip(${s.id})">x sil</button>
   </div>`).join('');
 }
 
-function lmDeleteShip(id){
-  if(!confirm('Bu gemiyi silmek istediğinize emin misiniz?'))return;
-  fetch(`/livemaps/vessels/${id}/sil`,{method:'POST'})
+function lmAddNot(id){
+  const not=prompt('Not girin:');
+  if(not===null)return;
+  fetch(`/livemaps/vessels/${id}/not`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({not_text:not})})
     .then(r=>r.json())
-    .then(d=>{if(d.ok){lmShips=lmShips.filter(s=>s.id!==id);lmRenderList();lmRedraw();}});
+    .then(d=>{if(d.ok){const s=lmShips.find(s=>s.id===id);if(s)s.not_text=not;lmRenderList();lmRedraw();}});
 }
 
-function lmUpdateCount(){document.getElementById('lm-count').innerHTML='Gemi: <b>'+lmShips.length+'</b>';}
-function lmHCard(id){
-  document.querySelectorAll('.lm-sc').forEach(c=>c.style.outline='');
-  const c=document.getElementById('lm-card-'+id);
-  if(c){c.style.outline='2px solid #3b82f6';c.scrollIntoView({behavior:'smooth',block:'nearest'});}
+function lmDeleteNot(id){
+  fetch(`/livemaps/vessels/${id}/not`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({not_text:''})})
+    .then(r=>r.json())
+    .then(d=>{if(d.ok){const s=lmShips.find(s=>s.id===id);if(s)s.not_text='';lmRenderList();lmRedraw();}});
 }
+
 function lmFocusShip(id){
   const s=lmShips.find(s=>s.id===id);if(!s)return;
   const b1=lmGetBaba(s.rihitim,s.taraf,s.babaBasNo);

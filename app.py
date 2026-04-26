@@ -873,3 +873,11 @@ def livemaps_vessel_sil(lv_id):
     db.execute("DELETE FROM livemaps_vessels WHERE id=?", (lv_id,))
     db.commit()
     return jsonify({'ok': True})
+
+@app.route('/livemaps/vessels/<int:lv_id>/not', methods=['POST'])
+def livemaps_vessel_not(lv_id):
+    db = get_db()
+    data = request.get_json()
+    db.execute("UPDATE livemaps_vessels SET not_text=? WHERE id=?", (data.get('not_text',''), lv_id))
+    db.commit()
+    return jsonify({'ok': True})
